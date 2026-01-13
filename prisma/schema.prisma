@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum roles {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id            String  @id @default(cuid())
+  name          String? // Added for Better Auth compatibility
+  firstName     String
+  lastName      String
+  email         String  @unique
+  emailVerified Boolean @default(false)
+  role          roles   @default(USER)
+  image         String?
+
+  sessions  Session[]
+  accounts  Account[]
+  reviews   Review[]
+  orders    Order[]
+  cart      Cart?
+  addresses Address[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user")
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String   @db.Text
+  mainImageUrl    String
+  titlePrice      Decimal  @db.Decimal(10, 2)
+  discountedPrice Decimal? @db.Decimal(10, 2)
+
+  isFeatured Boolean  @default(false)
+  isArchived Boolean  @default(false)
+  tags       String[]
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  variants   Variant[]
+  reviews    Review[]
+  orderItems OrderItem[] // Renamed for clarity
+  cartItems  CartItem[]
+  images     ProductImage[] // Removed the String[] array
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("product")
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+
+  // Relations
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("category")
+}
+
+model Variant {
+  id        String  @id @default(cuid())
+  sku       String? @unique // <--- New
+  type      String
+  value     String
+  stock     Int     @default(0)
+  productId String
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("variant")
+}
+
+model Review {
+  id        String  @id @default(cuid())
+  rating    Int // Typically 1-5
+  comment   String? @db.Text
+  productId String
+  userId    String
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // A user should only be able to review a product once
+  @@unique([userId, productId])
+  @@map("review")
+}
+
+model Order {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // FIXED: One order has one shipping address
+  addressId String
+  address   Address @relation(fields: [addressId], references: [id])
+
+  totalPrice Decimal     @db.Decimal(10, 2)
+  status     OrderStatus @default(PENDING)
+
+  // Flutterwave
+  tx_ref        String  @unique
+  flw_id        String?
+  paymentStatus String  @default("pending")
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int     @default(1)
+  price     Decimal @db.Decimal(10, 2) // Price at time of purchase
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_item")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("cart")
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String? // Important: Track WHICH size/color they added!
+  quantity  Int     @default(1)
+
+  @@map("cart_item")
+}
+
+model Address {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  streetAddress String
+  city          String
+  state         String
+  postalCode    String
+  country       String
+  isDefault     Boolean @default(false)
+
+  orders Order[] // Relation back to orders
+
+  @@map("address")
+}
+
+model ProductImage {
+  id      String  @id @default(cuid())
+  url     String // The public URL
+  key     String // The unique "File Key" from your storage provider (for deletion)
+  altText String? // Essential for SEO and screen readers
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  order Int @default(0) // Helps you sort which image shows first
+
+  @@map("product_image")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
