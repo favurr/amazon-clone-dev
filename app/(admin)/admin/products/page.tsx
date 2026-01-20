@@ -109,17 +109,17 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-  // Remove the if (!confirm(...)) line entirely
-  startTransition(async () => {
-    const res = await deleteProduct(id);
-    if (res.success) {
-      alert.success("Product deleted");
-      loadProducts();
-    } else {
-      alert.error(res.error || "Failed to delete product");
-    }
-  });
-};
+    // Remove the if (!confirm(...)) line entirely
+    startTransition(async () => {
+      const res = await deleteProduct(id);
+      if (res.success) {
+        alert.success("Product deleted");
+        loadProducts();
+      } else {
+        alert.error(res.error || "Failed to delete product");
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen space-y-4 font-sans text-[13px]">
@@ -327,14 +327,13 @@ export default function ProductsPage() {
                             <AlertDialogCancel className="h-8 text-[12px] font-bold rounded-sm">
                               Cancel
                             </AlertDialogCancel>
-                              <Button
-                                variant="destructive"
-                                className="h-8 text-[12px] font-bold rounded-sm px-4"
-                                disabled={isPending}
+                            <AlertDialogAction
+                              className="h-8 text-[12px] font-bold rounded-sm px-4 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={isPending}
                               onClick={() => handleDelete(product.id)}
-                              >
-                                {isPending ? "Deleting..." : "Delete Item"}
-                              </Button>
+                            >
+                              {isPending ? "Deleting..." : "Delete Item"}
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>

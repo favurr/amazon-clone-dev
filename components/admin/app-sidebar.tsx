@@ -11,6 +11,7 @@ import {
   Settings,
   Store,
   LayoutList,
+  MessageCircleMore,
 } from "lucide-react";
 
 import {
@@ -30,8 +31,9 @@ const items = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Categories", url: "/admin/categories", icon: LayoutList },
   { title: "Products", url: "/admin/products", icon: Package },
-  { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Customers", url: "/admin/customers", icon: Users },
+  { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+  { title: "Reviews", url: "/admin/reviews", icon: MessageCircleMore },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
