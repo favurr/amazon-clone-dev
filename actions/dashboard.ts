@@ -49,6 +49,64 @@ export async function getDashboardMetrics() {
   }
 }
 
+export async function getRecentOrders() {
+  try {
+    const orders = await prisma.order.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        totalPrice: true,
+        status: true, // e.g., "PENDING", "PROCESSING"
+        user: {
+          select: { name: true }
+        }
+      }
+    });
+
+    return orders.map(order => ({
+      id: order.id.slice(-7).toUpperCase(), // Clean ID for display
+      customer: order.user?.name || "Guest Customer",
+      // Math.floor to strictly avoid decimals
+      amount: Math.floor(Number(order.totalPrice)),
+      status: order.status
+    }));
+  } catch (error) {
+    console.error("RECENT_ORDERS_ERROR", error);
+    return [];
+  }
+}
+
+export async function getLowStockItems() {
+  try {
+    const lowStockVariants = await prisma.variant.findMany({
+      where: {
+        stock: { lt: 10 }, // Threshold
+      },
+      include: {
+        product: {
+          select: {
+            title: true,
+          }
+        }
+      },
+      orderBy: {
+        stock: "asc"
+      },
+      take: 10
+    });
+
+    return lowStockVariants.map(variant => ({
+      name: variant.product.title,
+      variant: `${variant.type}: ${variant.value}`, // e.g., "Storage: 1TB"
+      stock: Math.floor(variant.stock), // No decimals
+    }));
+  } catch (error) {
+    console.error("INVENTORY_STATUS_ERROR", error);
+    return [];
+  }
+}
+
 export async function getRevenueDashboardData() {
   try {
     const now = new Date();
@@ -102,58 +160,123 @@ export async function getRevenueDashboardData() {
   }
 }
 
-// actions/dashboard.ts
-export async function getRecentOrders() {
+export async function getCategoryDistribution() {
   try {
-    const orders = await prisma.order.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
+    const categories = await prisma.category.findMany({
       select: {
         id: true,
-        totalPrice: true,
-        status: true, // e.g., "PENDING", "PROCESSING"
-        user: {
-          select: { name: true }
+        name: true,
+        products: {
+          select: {
+            variants: {
+              select: { stock: true }
+            }
+          }
         }
       }
     });
 
-    return orders.map(order => ({
-      id: order.id.slice(-7).toUpperCase(), // Clean ID for display
-      customer: order.user?.name || "Guest Customer",
-      // Math.floor to strictly avoid decimals
-      amount: Math.floor(Number(order.totalPrice)),
-      status: order.status
-    }));
+    // Calculate total stock per category
+    const distribution = categories.map(cat => {
+      const totalStock = cat.products.reduce((acc, prod) => {
+        return acc + prod.variants.reduce((vAcc, v) => vAcc + v.stock, 0);
+      }, 0);
+
+      return {
+        id: cat.id,
+        name: cat.name,
+        count: totalStock
+      };
+    }).filter(c => c.count > 0) // Only show categories with items
+      .sort((a, b) => b.count - a.count);
+
+    if (distribution.length <= 6) return distribution;
+
+    // "Others" Logic: Keep top 5, aggregate the rest
+    const topFive = distribution.slice(0, 5);
+    const othersCount = distribution.slice(5).reduce((acc, curr) => acc + curr.count, 0);
+
+    return [
+      ...topFive,
+      { id: "others", name: "Others", count: othersCount }
+    ];
   } catch (error) {
-    console.error("RECENT_ORDERS_ERROR", error);
+    console.error("CATEGORY_DISTRIBUTION_ERROR", error);
     return [];
   }
 }
 
-export async function getLowStockItems() {
+export async function getTopCustomers() {
   try {
-    const items = await prisma.product.findMany({
-      where: {
-        stock: { lt: 10 }, // Items with less than 10 units
-      },
-      orderBy: { stock: "asc" },
-      take: 10,
+    const vips = await prisma.user.findMany({
+      take: 5,
       select: {
+        id: true,
         name: true,
-        stock: true,
-        // Assuming you have a category or variant field
-        category: { select: { name: true } } 
-      }
+        email: true,
+        image: true,
+        firstName: true,
+        lastName: true,
+        orders: {
+          where: {
+            status: "COMPLETED", // Only count successful revenue
+          },
+          select: {
+            totalPrice: true,
+          },
+        },
+      },
     });
 
-    return items.map(item => ({
-      name: item.name,
-      variant: item.category?.name || "Standard",
-      stock: Math.floor(item.stock), // No decimals
+    const formattedVips = vips
+      .map((user) => {
+        const totalSpent = user.orders.reduce(
+          (sum, order) => sum + Number(order.totalPrice),
+          0
+        );
+
+        return {
+          id: user.id,
+          name: user.name || `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          image: user.image,
+          // Respecting the "No Decimals" rule
+          spent: Math.floor(totalSpent),
+          initials: `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase(),
+        };
+      })
+      .sort((a, b) => b.spent - a.spent); // Sort highest spenders first
+
+    return formattedVips;
+  } catch (error) {
+    console.error("GET_TOP_CUSTOMERS_ERROR", error);
+    return [];
+  }
+}
+
+export async function getUrgentReviews() {
+  try {
+    const reviews = await prisma.review.findMany({
+      where: {
+        rating: { lte: 3 }, // 1, 2, or 3 stars
+      },
+      include: {
+        product: { select: { title: true } },
+        user: { select: { firstName: true, lastName: true, name: true } }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5
+    });
+
+    return reviews.map(r => ({
+      id: r.id,
+      user: r.user.name || `${r.user.firstName} ${r.user.lastName.slice(0, 1)}.`,
+      rating: r.rating,
+      comment: r.comment || "No comment provided.",
+      product: r.product.title
     }));
   } catch (error) {
-    console.error("INVENTORY_STATUS_ERROR", error);
+    console.error("GET_URGENT_REVIEWS_ERROR", error);
     return [];
   }
 }
