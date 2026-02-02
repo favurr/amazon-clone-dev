@@ -50,9 +50,12 @@ export async function loginAction(values: any) {
 }
 
 export async function logoutAction() {
+  const { cookies } = await import("next/headers");
+  const cookieHeader = (await cookies()).toString();
+
   await auth.api.signOut({
     headers: {
-      cookie: (await import("next/headers")).cookies().toString(),
+      cookie: cookieHeader,
     },
   });
 }

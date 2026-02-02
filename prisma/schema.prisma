@@ -21,13 +21,17 @@ enum OrderStatus {
 
 model User {
   id            String  @id @default(cuid())
-  name          String? // Added for Better Auth compatibility
+  name          String?
   firstName     String
   lastName      String
   email         String  @unique
   emailVerified Boolean @default(false)
   role          roles   @default(USER)
   image         String?
+
+  flwCustomerId    String? @unique
+  flwCustomerEmail String?
+  flwReferenceId   String? @unique
 
   sessions  Session[]
   accounts  Account[]
@@ -53,13 +57,12 @@ model Product {
   categoryId      String
   colors          String[]
 
-
   isFeatured Boolean @default(false)
   isArchived Boolean @default(false)
 
   category Category @relation(fields: [categoryId], references: [id])
 
-  tags      Tag[]          @relation("ProductTags")
+  tags       Tag[]          @relation("ProductTags")
   variants   Variant[]
   reviews    Review[]
   orderItems OrderItem[] // Renamed for clarity
@@ -69,6 +72,10 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([title]) // For search performance
+  @@index([categoryId]) // For category filtering
+  @@index([isFeatured, isArchived]) // For featured product queries
+  @@index([createdAt]) // For sorting by date
   @@map("product")
 }
 
@@ -84,6 +91,8 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([name]) // For search performance
+  @@index([isActive]) // For filtering active categories
   @@map("category")
 }
 
@@ -94,8 +103,9 @@ model Variant {
   price Decimal @db.Decimal(10, 2) // Optional: price override for this variant
   stock Int     @default(0)
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
 
   @@map("variant")
 }
@@ -148,12 +158,14 @@ model OrderItem {
   id        String  @id @default(cuid())
   orderId   String
   productId String
+  variantId String?
   quantity  Int     @default(1)
   price     Decimal @db.Decimal(10, 2) // Price at time of purchase
 
   // Relations
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product  @relation(fields: [productId], references: [id])
+  variant Variant? @relation(fields: [variantId], references: [id])
 
   @@map("order_item")
 }
@@ -272,5 +284,15 @@ model Tag {
   name     String    @unique
   products Product[] @relation("ProductTags")
 
+  @@index([name]) // For search performance
   @@map("tag")
+}
+
+model FlutterwaveToken {
+  id        String   @id @default(cuid())
+  token     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("flutterwave_token")
 }

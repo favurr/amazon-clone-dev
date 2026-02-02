@@ -47,7 +47,7 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="bg-gray-50 p-8">
+    <section className="bg-gray-50 h-screen p-8">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
         <Link href="/">
           <Image

@@ -155,3 +155,11 @@ export async function getProductsCategories() {
     select: { id: true, name: true }
   });
 }
+
+export async function getActiveCategories() {
+  return await prisma.category.findMany({
+    where: { isActive: true },
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true, slug: true }
+  });
+}

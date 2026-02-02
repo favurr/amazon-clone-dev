@@ -454,6 +454,7 @@ export function EditProductDialog({
                           <Input
                             className="h-8 text-xs w-20"
                             type="number"
+                            step="0.01"
                             placeholder="Price"
                             {...form.register(`variants.${index}.price`, {
                               valueAsNumber: true,
