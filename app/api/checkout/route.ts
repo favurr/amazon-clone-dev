@@ -168,13 +168,33 @@ export async function POST(req: Request) {
 
     const nonce = Math.random().toString().slice(2, 14);
 
-    const { payment_method_id } = await tokenizeCard({
+    const { payment_method_id, data: pmData } = await tokenizeCard({
       email: contactInfo.email,
       card_number: payment.cardNumber,
       cvv: payment.cvc,
       expiryDate: payment.expiryDate,
       nonce,
       traceId,
+    });
+
+    // Extract card network and last4 (defensive checks across possible response shapes)
+    const cardNetwork =
+      pmData?.data?.card?.network ??
+      pmData?.data?.card?.brand ??
+      pmData?.card?.brand ??
+      pmData?.data?.authorization?.card?.brand ??
+      null;
+    const cardLast4 =
+      pmData?.data?.card?.last4 ??
+      pmData?.data?.card?.last_four ??
+      pmData?.card?.last4 ??
+      pmData?.data?.last4 ??
+      null;
+
+    // Persist card details on the order (only non-sensitive values)
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { card_network: cardNetwork, card_last4: cardLast4 },
     });
 
     // Attempt to charge; if Flutterwave rejects the reference for size, retry once with a shorter ref

@@ -1,179 +1,252 @@
+import { getCustomerOrders } from "@/actions/order-actions";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
-import Link from "next/link";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Package, Calendar, Eye, Download, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/formatters";
+import Link from "next/link";
+import { Currency, CurrencyValue } from "@/components/currency";
+
+const statusStyles: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  PENDING: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    border: "border-amber-200",
+  },
+  COMPLETED: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+  },
+  FAILED: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
+  CANCELLED: {
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    border: "border-slate-200",
+  },
+};
 
 export default async function OrdersPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if (!session?.user) {
-    redirect("/auth/login?redirect=/orders");
+  if (!session) {
+    redirect("/auth/login");
   }
 
-  const ordersRaw = await prisma.order.findMany({
-    where: { userId: session.user.id },
-    include: {
-      items: {
-        include: {
-          product: {
-            select: {
-              title: true,
-              mainImageUrl: true,
-            },
-          },
-        },
-      },
-      address: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  // Convert Decimal to number for client components
-  const orders = ordersRaw.map((order) => ({
-    ...order,
-    totalPrice: Number(order.totalPrice),
-    items: order.items.map((item) => ({
-      ...item,
-      price: Number(item.price),
-    })),
-  }));
+  const orders = await getCustomerOrders(session.user.id);
 
   return (
-    <div className="min-h-screen bg-[#eaeded]">
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold mb-6">Your Orders</h1>
-
-        {orders.length === 0 ? (
-          <div className="bg-white rounded-lg p-8 text-center">
-            <h2 className="text-xl font-semibold mb-2">No orders yet</h2>
-            <p className="text-gray-600 mb-4">
-              Start shopping and your orders will appear here
+    <div className="min-h-screen py-8 px-4 md:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              My Orders
+            </h1>
+            <p className="text-slate-600 mt-1">
+              Track and manage your order history
             </p>
-            <Link
-              href="/"
-              className="inline-block bg-[#ffd814] hover:bg-[#f7ca00] px-6 py-2 rounded-md font-semibold"
-            >
-              Start Shopping
-            </Link>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition"
-              >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      Order placed:{" "}
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Order ID: {order.id.slice(0, 8)}
-                    </p>
-                  </div>
+        </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      {(() => {
-                        const ps = (order.paymentStatus || "").toLowerCase();
-                        let displayStatus = order.status ?? "PENDING";
-                        if (ps === "paid" || ps === "success")
-                          displayStatus = "COMPLETED";
-                        else if (ps === "pending") displayStatus = "PENDING";
-                        else if (ps === "cancelled" || ps === "canceled")
-                          displayStatus = "CANCELLED";
-                        else if (ps === "failed" || ps === "error")
-                          displayStatus = "FAILED";
-
-                        const statusClass =
-                          displayStatus === "COMPLETED"
-                            ? "bg-green-100 text-green-800"
-                            : displayStatus === "PENDING"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : displayStatus === "CANCELLED"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800";
-
-                        return (
-                          <span
-                            className={`px-3 py-2 rounded-full text-sm font-semibold ${statusClass}`}
-                          >
-                            {displayStatus}
-                          </span>
-                        );
-                      })()}
-
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600">Total</p>
-                        <p className="text-lg font-bold">
-                          {formatPrice(order.totalPrice)}
-                        </p>
-                      </div>
+        {/* Orders Table */}
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-0">
+            <div className="">
+              <div className="flex flex-row gap-8">
+                <div className="flex flex-col">
+                  <CardTitle className="text-sm font-normal text-slate-400">
+                    Orders
+                  </CardTitle>
+                  <CardDescription>
+                    <div className="text-xl font-bold text-slate-900">
+                      {orders.length}
                     </div>
-
-                    <Link
-                      href={`/orders/${order.id}`}
-                      className="inline-block bg-[#f3f4f6] hover:bg-[#e5e7eb] px-4 py-2 rounded-md text-sm font-semibold"
-                    >
-                      View Order
-                    </Link>
-                  </div>
+                  </CardDescription>
                 </div>
-
-                <div className="border-t pt-4">
-                  <div className="flex items-center gap-3 mb-4 overflow-x-auto">
-                    {order.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-3 bg-gray-50 rounded p-2 min-w-55"
-                      >
-                        <img
-                          src={item.product.mainImageUrl}
-                          alt={item.product.title}
-                          className="w-14 h-14 object-cover rounded"
+                <div className="flex flex-col">
+                  <CardTitle className="text-sm font-normal text-slate-400">
+                    Total Spent
+                  </CardTitle>
+                  <CardDescription>
+                    <div className="text-xl font-bold text-slate-900">
+                      <Currency>
+                        <CurrencyValue
+                          value={orders
+                            .filter((o) => o.status === "COMPLETED")
+                            .reduce((sum, o) => sum + o.total, 0)}
                         />
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-sm truncate">
-                            {item.product.title}
-                          </h3>
-                          <p className="text-xs text-gray-600">
-                            Qty: {item.quantity} • {formatPrice(item.price)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t md:flex md:items-start md:gap-6">
-                    <div className="md:flex-1">
-                      <h4 className="font-semibold mb-2">Shipping Address</h4>
-                      <p className="text-sm text-gray-600">
-                        {order.address.streetAddress}
-                        <br />
-                        {order.address.city}, {order.address.state}{" "}
-                        {order.address.postalCode}
-                        <br />
-                        {order.address.country}
-                      </p>
+                      </Currency>
                     </div>
-
-                    <div className="mt-4 md:mt-0">
-                      <p className="text-sm text-gray-600">
-                        Payment: {order.paymentStatus}
-                      </p>
-                    </div>
-                  </div>
+                  </CardDescription>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              {/* TODO: add search bar and filters */}
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {orders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="bg-slate-100 p-6 rounded-full mb-4">
+                  <ShoppingBag className="h-12 w-12 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  No orders yet
+                </h3>
+                <p className="text-slate-600 text-center mb-6 max-w-sm">
+                  Start shopping to see your orders here. Browse our collection
+                  and find something you love!
+                </p>
+                <Link href="/">
+                  <Button className="bg-orange-500 hover:bg-orange-600">
+                    Continue Shopping
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow className="hover:bg-slate-50">
+                      <TableHead className="font-semibold text-slate-700">
+                        Order ID
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-700">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-700">
+                        Items
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-700">
+                        Total
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-700">
+                        Status
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-700">
+                        Payment
+                      </TableHead>
+                      <TableHead className="text-right font-semibold text-slate-700">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow
+                        key={order.id}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-mono text-xs font-medium text-slate-900">
+                              ORD_{order.id.slice(0, 8).toUpperCase()}
+                            </span>
+                            <span className="text-[10px] text-slate-400 uppercase mt-0.5">
+                              {order.txRef}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                            {new Date(order.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-slate-400" />
+                            <span className="text-sm font-medium text-slate-700">
+                              {order.itemsCount}{" "}
+                              {order.itemsCount === 1 ? "item" : "items"}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <span className="text-sm font-bold text-slate-900">
+                            <Currency>
+                              <CurrencyValue value={order.total} />
+                            </Currency>
+                          </span>
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            className={`${statusStyles[order.status].bg} ${statusStyles[order.status].text} ${statusStyles[order.status].border} border font-semibold shadow-none px-2.5 py-1 text-xs`}
+                          >
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`h-2 w-2 rounded-full ${
+                                order.paymentStatus === "paid"
+                                  ? "bg-emerald-500"
+                                  : order.paymentStatus === "pending"
+                                    ? "bg-amber-400"
+                                    : "bg-red-500"
+                              }`}
+                            />
+                            <span className="text-xs capitalize text-slate-600">
+                              {order.paymentStatus}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link href={`/orders/${order.id}`}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 border-slate-300 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition-all"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                View Details
+                              </Button>
+                            </Link>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
