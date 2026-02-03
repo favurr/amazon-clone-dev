@@ -1,5 +1,3 @@
-import { nanoid } from 'nanoid/non-secure';
-
 const CACHE_KEY = 'flw_token';
 
 export class PaymentService {
@@ -72,7 +70,8 @@ export class PaymentService {
     expiryYear: string;
   }) {
     const token = await this.getToken();
-    const nonce = nanoid(12).replace(/[^0-9]/g, ''); // 12 digit number
+    // Generate a 12 digit number for nonce
+    const nonce = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
 
     const res = await fetch(`${this.baseUrl}/flutterwave/card`, {
       method: 'POST',
