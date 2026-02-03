@@ -105,7 +105,7 @@ export function PaymentForm({
           maxLength={19}
         />
         {form.formState.errors.cardNumber && (
-          <FieldError errors={[form.formState.errors.cardNumber.message!]} />
+          <FieldError errors={[form.formState.errors.cardNumber]} />
         )}
       </Field>
 
@@ -118,7 +118,7 @@ export function PaymentForm({
         />
         {form.formState.errors.cardholderName && (
           <FieldError
-            errors={[form.formState.errors.cardholderName.message!]}
+            errors={[form.formState.errors.cardholderName]}
           />
         )}
       </Field>
@@ -141,7 +141,7 @@ export function PaymentForm({
             }}
           />
           {form.formState.errors.expiryDate && (
-            <FieldError errors={[form.formState.errors.expiryDate.message!]} />
+            <FieldError errors={[form.formState.errors.expiryDate]} />
           )}
         </Field>
 
@@ -155,7 +155,7 @@ export function PaymentForm({
             maxLength={4}
           />
           {form.formState.errors.cvv && (
-            <FieldError errors={[form.formState.errors.cvv.message!]} />
+            <FieldError errors={[form.formState.errors.cvv]} />
           )}
         </Field>
       </div>
