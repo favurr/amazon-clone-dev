@@ -68,7 +68,7 @@ export default function NavbarClient({ categories, user, cartCount: initialCartC
   }, [pathname]);
 
   // Common class for the "Amazon-box" hover effect
-  const navBoxClass = "flex flex-col justify-center px-2 py-1 border border-transparent hover:border-white cursor-pointer rounded-sm transition-all duration-100";
+  const navBoxClass = "flex flex-col justify-center px-2 py-1 border border-transparent cursor-pointer rounded-sm transition-all duration-100";
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function NavbarClient({ categories, user, cartCount: initialCartC
   return (
     <nav className="flex items-center gap-4 px-4 bg-[#131921] h-[60px] text-white">
       {/* Amazon Logo */}
-      <Link href="/" className="px-2 border border-transparent hover:border-white pt-1 rounded-sm">
+      <Link href="/" className="px-2 border border-transparent pt-1 rounded-sm">
         <Image
           src="/amazon-logo-white.png"
           alt="Amazon Logo"
@@ -373,7 +373,7 @@ export default function NavbarClient({ categories, user, cartCount: initialCartC
       </Link>
 
       {/* Cart */}
-      <Link href="/cart" className="flex items-end px-2 py-1 border border-transparent hover:border-white rounded-sm relative cursor-pointer h-[44px]">
+      <Link href="/cart" className="flex items-end px-2 py-1 border border-transparent rounded-sm relative cursor-pointer h-[44px]">
         <div className="relative flex items-center">
           {/* Cart Icon */}
           <Image src="/cart.png" alt="Cart" width={40} height={40} />

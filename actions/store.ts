@@ -204,10 +204,11 @@ export async function getLandingData() {
       featured: formatProducts(featuredProducts),
       latest: formatProducts(latestProducts),
       categories,
+      
     };
   } catch (error) {
     console.error("GET_LANDING_DATA_ERROR", error);
-    return { featured: [], latest: [], categories: [] };
+    return { featured: [], latest: [], categories: [], };
   }
 }
 

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import Image from "next/image";
+import { FeaturedCard } from "@/components/store/featured-card";
 
 export default async function HomePage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -203,9 +204,9 @@ async function FeaturedProductsSection({ userId }: { userId?: string }) {
           See more
         </Link>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {displayProducts.map((product) => (
-          <ProductCard
+          <FeaturedCard
             key={product.id}
             product={product}
             userId={userId}

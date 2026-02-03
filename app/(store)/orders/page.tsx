@@ -1,15 +1,5 @@
 import { getCustomerOrders } from "@/actions/order-actions";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Currency, CurrencyValue } from "@/components/currency";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,10 +9,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Package, Calendar, Eye, Download, ShoppingBag } from "lucide-react";
-import { formatPrice } from "@/lib/formatters";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { auth } from "@/lib/auth";
+import { Calendar, Package, ShoppingBag } from "lucide-react";
+import { headers } from "next/headers";
 import Link from "next/link";
-import { Currency, CurrencyValue } from "@/components/currency";
+import { redirect } from "next/navigation";
 
 const statusStyles: Record<
   string,
@@ -107,7 +106,7 @@ export default async function OrdersPage() {
               {/* TODO: add search bar and filters */}
             </div>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="px-2 p-0">
             {orders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
                 <div className="bg-slate-100 p-6 rounded-full mb-4">
@@ -127,7 +126,7 @@ export default async function OrdersPage() {
                 </Link>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto px-2">
                 <Table>
                   <TableHeader className="bg-slate-50">
                     <TableRow className="hover:bg-slate-50">
@@ -229,11 +228,10 @@ export default async function OrdersPage() {
                           <div className="flex items-center justify-end gap-2">
                             <Link href={`/orders/${order.id}`}>
                               <Button
-                                variant="outline"
+                                variant="link"
                                 size="sm"
-                                className="h-8 gap-1.5 border-slate-300 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition-all"
+                                className="h-8 hover:text-orange-600 text-black"
                               >
-                                <Eye className="h-3.5 w-3.5" />
                                 View Details
                               </Button>
                             </Link>
