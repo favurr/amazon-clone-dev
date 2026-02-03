@@ -5,6 +5,7 @@ import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -22,7 +23,7 @@ import { AlertCircle } from "lucide-react";
 import { adminSignIn } from "@/actions/admin-auth";
 import { toast } from "sonner";
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
@@ -179,5 +180,28 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen p-8">
+        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
+          <div className="w-full bg-white rounded-lg shadow-xl md:mt-0 sm:max-w-md xl:p-0">
+            <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold leading-tight tracking-tight text-gray-900 md:text-3xl">
+                  Admin Portal
+                </h1>
+                <p className="text-sm text-gray-600 mt-2">Loading...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    }>
+      <AdminLoginForm />
+    </Suspense>
   );
 }
