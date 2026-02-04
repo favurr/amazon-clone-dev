@@ -20,6 +20,7 @@ interface ProductCardProps {
     id: string;
     slug: string;
     title: string;
+    description?: string;
     titlePrice: number;
     discountedPrice?: number | null;
     mainImageUrl: string;
@@ -30,12 +31,16 @@ interface ProductCardProps {
   };
   userId?: string;
   compact?: boolean;
+  variant?: "default" | "hero" | "overlay";
+  className?: string;
 }
 
 export function FeaturedCard({
   product,
   userId,
   compact = false,
+  variant = "default",
+  className = "",
 }: ProductCardProps) {
   const discount = product.discountedPrice
     ? Math.round(
@@ -47,18 +52,88 @@ export function FeaturedCard({
   const finalPrice = product.discountedPrice || product.titlePrice;
   const inStock = (product.totalStock || 0) > 0;
 
+  // Hero variant - large card (takes 2 columns)
+  if (variant === "hero") {
+    return (
+      <Link href={`/products/${product.slug}`} className={cn("group block col-span-2", className)}>
+        <Card className="relative h-70 py-0 overflow-hidden bg-white shadow-sm hover:shadow-lg transition-shadow">
+          {discount > 0 && (
+            <Badge className="absolute top-4 left-4 z-10 bg-[#c7511f] text-white">
+              -{discount}%
+            </Badge>
+          )}
+          
+          <div className="flex h-full">
+            
+            {/* Content Section */}
+            <div className="flex-1 px-4 py-auto flex flex-col justify-center items-center">
+              <div>
+                <h3 className="text-xl font-bold text-[#0F1111] mb-3 line-clamp-2">
+                  {product.title}
+                </h3>
+                <div className="text-sm text-[#565959] mb-4 line-clamp-3">
+                  {product.description || "Discover amazing features and quality with this premium product."}
+                </div>
+              </div>
+            </div>
+
+            {/* Image Section */}
+            <div className="flex-1 relative">
+              <img
+                src={product.mainImageUrl}
+                alt={product.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        </Card>
+      </Link>
+    );
+  }
+
+  // Overlay variant - background image with text overlay
+  if (variant === "overlay") {
+    return (
+      <Link href={`/products/${product.slug}`} className={cn("group block", className)}>
+        <Card className="relative h-70 overflow-hidden bg-gray-900">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img
+              src={product.mainImageUrl}
+              alt={product.title}
+              className="w-full h-full object-cover"
+            />
+            {/* Dark blur overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+          </div>
+          
+          {/* Content Overlay - Bottom Left */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold line-clamp-2">
+                {product.title}
+              </h3>
+              <p className="text-xs text-gray-200 line-clamp-2">
+                {product.description || "Premium quality product"}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    );
+  }
+
+  // Default/compact variant
   if (compact) {
     return (
-      <Link href={`/products/${product.slug}`} className="group block">
+      <Link href={`/products/${product.slug}`} className={cn("group block", className)}>
         <Card className="relative h-32 mx-auto w-full pt-0">
-
-
           {discount > 0 && (
             <Badge
               variant="secondary"
-              className="absolute top-1 left-1 bg-[#c7511f] text-white text-xs font-bold px-2 py-0.5 rounded"
+              className="absolute top-1 left-1 bg-[#c7511f] text-white text-xs font-bold px-2 py-0.5 rounded z-10"
             >
-              -{discount}% discount on first buy
+              -{discount}%
             </Badge>
           )}
 
@@ -68,10 +143,10 @@ export function FeaturedCard({
               {product.title}
             </CardTitle>
             <CardDescription>
-              
+              ${finalPrice.toFixed(2)}
             </CardDescription>
           </CardHeader>
-                    <img
+          <img
             src={product.mainImageUrl}
             alt={product.title}
             className="relative z-2 aspect-video w-full object-contain"
@@ -80,4 +155,6 @@ export function FeaturedCard({
       </Link>
     );
   }
+
+  return null;
 }

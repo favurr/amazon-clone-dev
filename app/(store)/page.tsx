@@ -204,15 +204,42 @@ async function FeaturedProductsSection({ userId }: { userId?: string }) {
           See more
         </Link>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayProducts.map((product) => (
-          <FeaturedCard
-            key={product.id}
-            product={product}
-            userId={userId}
-            compact
-          />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {displayProducts.map((product, index) => {
+          // First product - hero card (2 columns)
+          if (index === 0) {
+            return (
+              <FeaturedCard
+                key={product.id}
+                product={product}
+                userId={userId}
+                variant="hero"
+              />
+            );
+          }
+          // Next 2 products - overlay cards (1 column each)
+          else if (index === 1 || index === 2) {
+            return (
+              <FeaturedCard
+                key={product.id}
+                product={product}
+                userId={userId}
+                variant="overlay"
+              />
+            );
+          }
+          // Rest - compact cards
+          else {
+            return (
+              <FeaturedCard
+                key={product.id}
+                product={product}
+                userId={userId}
+                compact
+              />
+            );
+          }
+        })}
       </div>
     </div>
   );

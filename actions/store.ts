@@ -159,7 +159,17 @@ export async function getLandingData() {
       prisma.product.findMany({
         where: { isFeatured: true, isArchived: false },
         take: 12,
-        include: {
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          description: true,
+          titlePrice: true,
+          discountedPrice: true,
+          mainImageUrl: true,
+          isFeatured: true,
+          isArchived: true,
+          createdAt: true,
           category: { select: { name: true } },
           images: { take: 1, orderBy: { order: "asc" } },
           variants: { select: { stock: true, price: true } },
