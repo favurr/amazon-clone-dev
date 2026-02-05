@@ -1,95 +1,73 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { submitChargeAuth } from "@/actions/flutterwave/charge";
+import { NextRequest, NextResponse } from "next/server";
+import { paystackRequest } from "@/lib/paystack";
+import type {
+  ChargeResponse,
+  CardDetails,
+  PaymentMetadata,
+} from "@/lib/paystack-types";
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { chargeId, type, pin, otp, orderId, nonce } = body as {
-      chargeId: string;
-      type: "pin" | "otp";
-      pin?: string;
-      otp?: string;
-      orderId?: string;
-      nonce?: string;
-    };
+    const body = await request.json();
+    const {
+      email,
+      address,
+      amount,
+      card,
+      pin,
+      reference,
+      metadata,
+    }: {
+      email: string;
+      address: string;
+      amount: number;
+      card: CardDetails;
+      pin: string;
+      reference: string;
+      metadata: PaymentMetadata;
+    } = body;
 
-    if (
-      !chargeId ||
-      !type ||
-      (type === "pin" && !pin) ||
-      (type === "otp" && !otp)
-    ) {
+    if (!pin || !reference) {
       return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 },
+        { error: "PIN and reference are required" },
+        { status: 400 }
       );
     }
 
-    // If noop nonce provided, or not, create one server-side to be safe
-    const useNonce = nonce || Math.random().toString().slice(2, 14);
+    // Build metadata with address
+    const enrichedMetadata: PaymentMetadata = {
+      ...metadata,
+      custom_fields: [
+        ...(metadata.custom_fields || []),
+        {
+          display_name: "Customer Address",
+          variable_name: "customer_address",
+          value: address,
+        },
+      ],
+    };
 
-    const { data: updateData } = await submitChargeAuth({
-      chargeId,
-      type,
+    // Resubmit charge with PIN
+    const response = await paystackRequest<ChargeResponse>("/charge", "POST", {
+      email,
+      amount,
+      card: {
+        number: card.number.replace(/\s/g, ""),
+        cvv: card.cvv,
+        expiry_month: card.expiry_month,
+        expiry_year: card.expiry_year,
+      },
       pin,
-      otp,
-      nonce: useNonce,
+      reference, // Important: use same reference
+      metadata: enrichedMetadata,
     });
 
-    // Log the submit auth response
-    console.log("SUBMIT_AUTH_RESPONSE", { type, chargeId, updateData });
-
-    // If Flutterwave requires further action (3DS), forward that to client
-    const nextAction = updateData?.data?.next_action ?? updateData?.next_action;
-    if (nextAction?.redirect_url?.url) {
-      return NextResponse.json({
-        requiresAction: true,
-        redirectUrl: nextAction.redirect_url.url,
-        updateData,
-      });
-    }
-
-    const finalStatus = updateData?.status ?? updateData?.data?.status;
-
-    if (finalStatus === "success" || finalStatus === "succeeded") {
-      // If orderId was provided, fulfill the order (decrement stock) and clear cart
-      if (orderId) {
-        try {
-          const flwId = updateData?.data?.id ?? updateData?.id;
-
-          try {
-            const { fulfillOrder } = await import("@/lib/order-utils");
-            const order = await fulfillOrder(orderId, flwId);
-
-            // Clear cart for the user
-            if (order) {
-              const cart = await prisma.cart.findUnique({
-                where: { userId: order.userId },
-              });
-              if (cart) {
-                await prisma.cartItem.deleteMany({
-                  where: { cartId: cart.id },
-                });
-              }
-            }
-          } catch (e) {
-            console.error("Error fulfilling order (stock update)", e);
-          }
-        } catch (e) {
-          console.error("Error updating order after auth submit", e);
-        }
-      }
-
-      return NextResponse.json({ success: true, updateData });
-    }
-
-    return NextResponse.json({ success: false, updateData });
-  } catch (err: any) {
-    console.error("SUBMIT_AUTH_ERROR", err);
+    return NextResponse.json(response);
+  } catch (error: any) {
+    console.error("Submit PIN error:", error);
     return NextResponse.json(
-      { message: err?.message ?? "Failed to submit auth" },
-      { status: 500 },
+      { error: error.message || "Failed to submit PIN" },
+      { status: 500 }
     );
   }
 }

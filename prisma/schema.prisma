@@ -29,10 +29,6 @@ model User {
   role          roles   @default(USER)
   image         String?
 
-  flwCustomerId    String? @unique
-  flwCustomerEmail String?
-  flwReferenceId   String? @unique
-
   sessions  Session[]
   accounts  Account[]
   reviews   Review[]
@@ -141,9 +137,9 @@ model Order {
   totalPrice Decimal     @db.Decimal(10, 2)
   status     OrderStatus @default(PENDING)
 
-  // Flutterwave
+  // Paystack
   tx_ref        String  @unique
-  flw_id        String?
+  paystack_id   String?
   paymentStatus String  @default("pending")
   card_network  String?
   card_last4    String?
@@ -288,13 +284,4 @@ model Tag {
 
   @@index([name]) // For search performance
   @@map("tag")
-}
-
-model FlutterwaveToken {
-  id        String   @id @default(cuid())
-  token     String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@map("flutterwave_token")
 }

@@ -344,7 +344,7 @@ export default async function OrderDetailsPage({
                   </div>
                   {order.flwId && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Flutterwave ID</span>
+                      <span className="text-slate-600">Paystack ID</span>
                       <span className="font-mono text-xs font-medium text-slate-900">
                         {order.flwId}
                       </span>

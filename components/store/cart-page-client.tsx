@@ -232,7 +232,7 @@ export default function CartPageWrapper({ cartData }: CartPageClientProps) {
 
               <div className="mt-6 p-4 bg-slate-50 rounded-lg">
                 <p className="text-xs text-slate-600 text-center">
-                  Secure checkout powered by Flutterwave. Your payment
+                  Secure checkout powered by Paystack. Your payment
                   information is protected.
                 </p>
               </div>

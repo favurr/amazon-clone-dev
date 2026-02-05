@@ -36,6 +36,7 @@ import Cart from "./checkout-cart";
 import CheckOutCart from "./checkout-cart";
 import { getCart } from "@/actions/store";
 import { authClient } from "@/lib/auth-client";
+import { PaymentModal } from "./store/checkout/payment-modals";
 
 interface ProductPrice {
   regular: number;
@@ -152,6 +153,16 @@ const Checkout = ({
   const [activeAccordion, setActiveAccordion] = useState("item-1");
   const [cartData, setCartData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: "pin" | "otp" | "birthday" | null;
+    displayText?: string;
+    reference?: string;
+    orderId?: string;
+  }>({
+    isOpen: false,
+    type: null,
+  });
 
   const defaultProducts = cartItems.map((item) => ({
     product_id: item.product_id,
@@ -196,6 +207,117 @@ const Checkout = ({
   const taxAmount = roundTo2(totalPrice * TAX_RATE);
   const grandTotal = roundTo2(totalPrice + taxAmount);
 
+  const handleModalSubmit = async (value: string) => {
+    setIsSubmitting(true);
+    try {
+      const endpoint =
+        modalState.type === "pin"
+          ? "/api/payments/submit-pin"
+          : modalState.type === "otp"
+            ? "/api/payments/submit-otp"
+            : "/api/payments/submit-birthday";
+
+      // Get card details from form
+      const formData = form.getValues();
+      const [expiryMonth, expiryYear] = formData.payment.expiryDate.split("/");
+
+      const body: any = {
+        reference: modalState.reference,
+      };
+
+      if (modalState.type === "pin") {
+        body.pin = value;
+        body.email = formData.contactInfo.email;
+        body.address = formData.address.address;
+        body.amount = Math.round(grandTotal * 100); // Convert to kobo
+        body.card = {
+          number: removeSpaces(formData.payment.cardNumber),
+          cvv: formData.payment.cvc,
+          expiry_month: expiryMonth,
+          expiry_year: `20${expiryYear}`,
+        };
+        body.metadata = {
+          custom_fields: [
+            {
+              display_name: "Order ID",
+              variable_name: "order_id",
+              value: modalState.orderId,
+            },
+          ],
+          order_id: modalState.orderId,
+        };
+      } else if (modalState.type === "otp") {
+        body.otp = value;
+      } else if (modalState.type === "birthday") {
+        body.birthday = value;
+      }
+
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const respJson = await resp.json().catch(() => null);
+
+      if (respJson?.requiresAction && respJson?.redirectUrl) {
+        window.location.href = respJson.redirectUrl;
+        return;
+      }
+
+      if (respJson?.data?.status === "success") {
+        // Update order status
+        await fetch(`/api/orders/${modalState.orderId}/complete`, {
+          method: "POST",
+        });
+
+        setModalState({ isOpen: false, type: null });
+        toast.success("Payment successful!");
+        router.push("/orders");
+        return;
+      }
+
+      // Check if requires another auth step
+      if (respJson?.data?.status === "send_otp") {
+        setModalState({
+          isOpen: true,
+          type: "otp",
+          displayText: respJson.data.display_text,
+          reference: respJson.data.reference,
+          orderId: modalState.orderId,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (respJson?.data?.status === "send_birthday") {
+        setModalState({
+          isOpen: true,
+          type: "birthday",
+          displayText: respJson.data.display_text,
+          reference: respJson.data.reference,
+          orderId: modalState.orderId,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.error(respJson?.message || "Payment could not be completed.");
+      setModalState({ isOpen: false, type: null });
+    } catch (error: any) {
+      console.error("Modal submit error:", error);
+      toast.error(error.message || "An error occurred");
+      setModalState({ isOpen: false, type: null });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setModalState({ isOpen: false, type: null });
+    setIsSubmitting(false);
+  };
+
   const onSubmit = async (data: CheckoutFormType) => {
     if (!userId) {
       toast.error("You must be signed in to complete checkout");
@@ -231,57 +353,15 @@ const Checkout = ({
       }
 
       if (json?.requiresAuth) {
-        const authType = json.authType;
-        const promptLabel =
-          authType === "pin"
-            ? "Enter your card PIN (4 digits):"
-            : "Enter the OTP code sent to you:";
-        const code = window.prompt(promptLabel);
-        if (!code) {
-          toast.error(
-            authType === "pin"
-              ? "PIN is required to continue"
-              : "OTP is required to continue",
-          );
-          return;
-        }
-        if (authType === "pin" && !/^\d{3,5}$/.test(code)) {
-          toast.error("Invalid PIN format");
-          return;
-        }
-        if (authType === "otp" && !/^\d{3,6}$/.test(code)) {
-          toast.error("Invalid OTP format");
-          return;
-        }
-
-        const body: any = {
-          chargeId: json.chargeId,
-          type: authType,
+        // Show modal instead of window.prompt
+        setModalState({
+          isOpen: true,
+          type: json.authType,
+          displayText: json.displayText,
+          reference: json.reference,
           orderId: json.orderId,
-        };
-        if (authType === "pin") body.pin = code;
-        else body.otp = code;
-
-        const resp = await fetch("/api/payments/submit-pin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
         });
-
-        const respJson = await resp.json().catch(() => null);
-        console.log("SUBMIT_AUTH_RESPONSE", respJson);
-        if (respJson?.requiresAction && respJson?.redirectUrl) {
-          window.location.href = respJson.redirectUrl;
-          return;
-        }
-
-        if (respJson?.success) {
-          toast.success("Payment successful!");
-          router.push("/orders");
-          return;
-        }
-
-        toast.error("Payment could not be completed. Please try again.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -424,6 +504,18 @@ const Checkout = ({
           </form>
         </FormProvider>
       </div>
+
+      {/* Payment Modal for PIN/OTP/Birthday */}
+      {modalState.isOpen && modalState.type && (
+        <PaymentModal
+          isOpen={modalState.isOpen}
+          type={modalState.type}
+          displayText={modalState.displayText}
+          onSubmit={handleModalSubmit}
+          onClose={handleModalClose}
+          loading={isSubmitting}
+        />
+      )}
     </section>
   );
 };
