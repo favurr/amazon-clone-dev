@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 
-export async function fulfillOrder(orderId: string, flwId?: string) {
-  console.log("FULFILL_ORDER_START", { orderId, flwId });
+export async function fulfillOrder(orderId: string, paystackId?: string) {
+  console.log("FULFILL_ORDER_START", { orderId, paystackId });
 
   // Load the order with items
   const order = await prisma.order.findUnique({
@@ -50,9 +50,9 @@ export async function fulfillOrder(orderId: string, flwId?: string) {
     }
   }
 
-  // Update order status and payment status and optionally flw_id
+  // Update order status and payment status and optionally paystack_id
   const updateData: any = { status: "COMPLETED", paymentStatus: "paid" };
-  if (flwId) updateData.flw_id = flwId;
+  if (paystackId) updateData.paystack_id = paystackId;
 
   await prisma.order.update({ where: { id: orderId }, data: updateData });
 

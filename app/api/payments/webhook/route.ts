@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     // Handle charge.success event
     if (event.event === "charge.success") {
-      const { reference, status, amount, customer, metadata } = event.data;
+      const { reference, status, amount, customer, metadata, authorization } = event.data;
 
       if (status === "success") {
         console.log("[Webhook] Payment successful:", reference);
@@ -52,13 +52,19 @@ export async function POST(request: NextRequest) {
         const orderId = metadata?.order_id;
 
         if (orderId) {
-          // Update order status
+          // Extract card details from authorization
+          const cardNetwork = authorization?.brand || authorization?.card_type?.split(' ')[0];
+          const cardLast4 = authorization?.last4;
+
+          // Update order status with card details
           const order = await prisma.order.update({
             where: { id: orderId },
             data: {
               status: "COMPLETED",
               paymentStatus: "success",
               paystack_id: reference,
+              card_network: cardNetwork,
+              card_last4: cardLast4,
             },
           });
 

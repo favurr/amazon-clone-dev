@@ -114,7 +114,7 @@ export async function getOrderDetails(orderId: string, userId: string) {
       status: order.status,
       paymentStatus: order.paymentStatus,
       txRef: order.tx_ref,
-      flwId: order.flw_id,
+      paystackId: order.paystack_id,
       cardNetwork: order.card_network,
       cardLast4: order.card_last4,
       date: order.createdAt,

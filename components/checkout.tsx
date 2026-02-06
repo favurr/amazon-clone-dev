@@ -362,10 +362,16 @@ const Checkout = ({
       );
 
       if (data.data?.status === "success") {
-        // Complete order
+        // Complete order with card details
         if (orderId) {
           await fetch(`/api/orders/${orderId}/complete`, {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              paystackId: reference,
+              cardNetwork: data.data?.authorization?.brand || data.data?.authorization?.card_type?.split(' ')[0],
+              cardLast4: data.data?.authorization?.last4,
+            }),
           });
         }
 

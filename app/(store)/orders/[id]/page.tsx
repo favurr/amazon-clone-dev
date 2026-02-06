@@ -338,15 +338,15 @@ export default async function OrderDetailsPage({
                       />
                     )}
                     <span className="font-mono text-xs font-medium text-slate-900">
-                      {order.cardNetwork?.toUpperCase() ?? "CARD"} ending in{" "}
-                      {order.cardLast4}
+                      {order.cardNetwork?.toUpperCase() ?? "CARD"}
+                      {order.cardLast4 && ` ending in ${order.cardLast4}`}
                     </span>
                   </div>
-                  {order.flwId && (
+                  {order.paystackId && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Paystack ID</span>
+                      <span className="text-slate-600">Paystack Reference</span>
                       <span className="font-mono text-xs font-medium text-slate-900">
-                        {order.flwId}
+                        {order.paystackId}
                       </span>
                     </div>
                   )}
