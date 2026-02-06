@@ -1,11 +1,13 @@
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
-const PAYSTACK_BASE_URL = process.env.PAYSTACK_BASE_URL!;
+const PAYSTACK_BASE_URL = process.env.PAYSTACK_BASE_URL || "https://api.paystack.co";
 
 export async function paystackRequest<T>(
   endpoint: string,
   method: "GET" | "POST" = "POST",
   body?: any
 ): Promise<T> {
+  console.log(`[Paystack] ${method} ${PAYSTACK_BASE_URL}${endpoint}`);
+  
   const response = await fetch(`${PAYSTACK_BASE_URL}${endpoint}`, {
     method,
     headers: {
@@ -15,12 +17,19 @@ export async function paystackRequest<T>(
     body: body ? JSON.stringify(body) : undefined,
   });
 
+  const responseData = await response.json();
+  
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Paystack request failed");
+    console.error("[Paystack Error]", {
+      status: response.status,
+      statusText: response.statusText,
+      data: responseData,
+    });
+    throw new Error(responseData.message || "Paystack request failed");
   }
 
-  return response.json();
+  console.log("[Paystack Success]", responseData);
+  return responseData;
 }
 
 export function validateCardNumber(number: string): boolean {

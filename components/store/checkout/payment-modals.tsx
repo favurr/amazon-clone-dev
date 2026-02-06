@@ -54,7 +54,7 @@ export function PaymentModal({
   const getPlaceholder = () => {
     switch (type) {
       case "pin":
-        return "Enter your 4-digit PIN";
+        return "Enter your PIN (4 or 6 digits)";
       case "otp":
         return "Enter OTP code";
       case "birthday":
@@ -79,7 +79,6 @@ export function PaymentModal({
             placeholder={getPlaceholder()}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            maxLength={type === "pin" ? 4 : type === "otp" ? 6 : undefined}
             autoFocus
             onKeyDown={(e) => {
               if (e.key === "Enter") {

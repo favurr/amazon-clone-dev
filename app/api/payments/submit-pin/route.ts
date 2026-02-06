@@ -9,23 +9,12 @@ import type {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      email,
-      address,
-      amount,
-      card,
-      pin,
+    const { pin, reference }: { pin: string; reference: string } = body;
+
+    console.log("[Submit PIN] Received request:", {
       reference,
-      metadata,
-    }: {
-      email: string;
-      address: string;
-      amount: number;
-      card: CardDetails;
-      pin: string;
-      reference: string;
-      metadata: PaymentMetadata;
-    } = body;
+      pinLength: pin?.length,
+    });
 
     if (!pin || !reference) {
       return NextResponse.json(
@@ -34,33 +23,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build metadata with address
-    const enrichedMetadata: PaymentMetadata = {
-      ...metadata,
-      custom_fields: [
-        ...(metadata.custom_fields || []),
-        {
-          display_name: "Customer Address",
-          variable_name: "customer_address",
-          value: address,
-        },
-      ],
-    };
-
-    // Resubmit charge with PIN
-    const response = await paystackRequest<ChargeResponse>("/charge", "POST", {
-      email,
-      amount,
-      card: {
-        number: card.number.replace(/\s/g, ""),
-        cvv: card.cvv,
-        expiry_month: card.expiry_month,
-        expiry_year: card.expiry_year,
-      },
-      pin,
-      reference, // Important: use same reference
-      metadata: enrichedMetadata,
-    });
+    // Submit PIN for existing charge
+    const response = await paystackRequest<ChargeResponse>(
+      "/charge/submit_pin",
+      "POST",
+      {
+        pin,
+        reference,
+      }
+    );
 
     return NextResponse.json(response);
   } catch (error: any) {

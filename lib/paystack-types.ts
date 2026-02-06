@@ -40,6 +40,8 @@ export interface ChargeResponse {
     amount: number;
     display_text?: string;
     url?: string; // For 3D Secure
+    gateway_response?: string; // Paystack gateway response
+    message?: string; // Transaction message
     authorization?: {
       authorization_code: string;
     };

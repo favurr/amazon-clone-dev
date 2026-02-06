@@ -62,9 +62,26 @@ export async function POST(request: NextRequest) {
 
     // Initialize Paystack charge using our API
     const [expiryMonth, expiryYear] = payment.expiryDate.split("/");
+    const customerName = `${address.firstName} ${address.lastName}`;
+    const customerPhone = contactInfo.phone || "";
+    
+    const amountInKobo = formatAmount(totalPrice);
+    
+    console.log("[Checkout] Payment details:", {
+      email: contactInfo.email,
+      amount: amountInKobo,
+      cardLast4: payment.cardNumber.slice(-4),
+      expiryMonth: expiryMonth?.trim(),
+      expiryYear: expiryYear?.trim(),
+      customerName,
+      customerPhone,
+    });
+    
+    const initializeUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/payments/initialize`;
+    console.log("[Checkout] Calling initialize URL:", initializeUrl);
     
     const chargeResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/payments/initialize`,
+      initializeUrl,
       {
         method: "POST",
         headers: {
@@ -73,13 +90,16 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           email: contactInfo.email,
           address: address.address,
-          amount: formatAmount(totalPrice), // Convert to kobo
+          amount: amountInKobo, // Already converted to kobo
           card: {
-            number: payment.cardNumber,
+            number: payment.cardNumber.replace(/\s/g, ""),
             cvv: payment.cvc,
-            expiry_month: expiryMonth,
-            expiry_year: `20${expiryYear}`,
+            expiry_month: expiryMonth?.trim(),
+            expiry_year: `20${expiryYear?.trim()}`,
           },
+          first_name: address.firstName,
+          last_name: address.lastName,
+          phone: customerPhone,
           metadata: {
             custom_fields: [
               {
@@ -90,7 +110,12 @@ export async function POST(request: NextRequest) {
               {
                 display_name: "Customer Name",
                 variable_name: "customer_name",
-                value: `${address.firstName} ${address.lastName}`,
+                value: customerName,
+              },
+              {
+                display_name: "Phone Number",
+                variable_name: "phone",
+                value: customerPhone,
               },
             ],
             order_id: order.id,
@@ -99,8 +124,20 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    console.log("[Checkout] Initialize response status:", chargeResponse.status);
+
     if (!chargeResponse.ok) {
-      const error = await chargeResponse.json();
+      let errorMessage = "Payment initialization failed";
+      try {
+        const error = await chargeResponse.json();
+        errorMessage = error.error || error.message || errorMessage;
+      } catch (parseError) {
+        // If response is not JSON (HTML error page), get text
+        const errorText = await chargeResponse.text();
+        console.error("Non-JSON error response:", errorText.substring(0, 200));
+        errorMessage = `Payment service error (${chargeResponse.status})`;
+      }
+      
       // Update order to failed
       await prisma.order.update({
         where: { id: order.id },
@@ -108,7 +145,7 @@ export async function POST(request: NextRequest) {
       });
       
       return NextResponse.json(
-        { error: error.error || "Payment initialization failed" },
+        { error: errorMessage },
         { status: 500 }
       );
     }
@@ -181,10 +218,17 @@ export async function POST(request: NextRequest) {
 
       case "open_url":
         // 3D Secure authentication required
+        console.log("[Checkout] 3DS redirect required:", {
+          url,
+          orderId: order.id,
+          reference: chargeData.data.reference,
+        });
+        
         return NextResponse.json({
           requiresAction: true,
           redirectUrl: url,
           orderId: order.id,
+          reference: chargeData.data.reference,
         });
 
       case "pending":

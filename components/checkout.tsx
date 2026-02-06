@@ -37,6 +37,7 @@ import CheckOutCart from "./checkout-cart";
 import { getCart } from "@/actions/store";
 import { authClient } from "@/lib/auth-client";
 import { PaymentModal } from "./store/checkout/payment-modals";
+import { Paystack3DSModal } from "./store/checkout/paystack-3ds-modal";
 
 interface ProductPrice {
   regular: number;
@@ -136,14 +137,17 @@ const checkoutFormSchema = z.object({
 type CheckoutFormType = z.infer<typeof checkoutFormSchema>;
 
 interface CheckoutProps {
-  cartItems: CartItem[];
+  cartItemData: {
+    items: any[];
+    total: number;
+  };
   userId?: string;
   onComplete?: () => void;
   disabled?: boolean;
 }
 
 const Checkout = ({
-  cartItems,
+  cartItemData,
   userId,
   onComplete,
   disabled = false,
@@ -163,11 +167,21 @@ const Checkout = ({
     isOpen: false,
     type: null,
   });
+  const [threeDSState, setThreeDSState] = useState<{
+    isOpen: boolean;
+    url?: string;
+    reference?: string;
+    orderId?: string;
+  }>({
+    isOpen: false,
+  });
 
-  const defaultProducts = cartItems.map((item) => ({
-    product_id: item.product_id,
+  const { items, total } = cartItemData;
+
+  const defaultProducts = cartItemData.items.map((item) => ({
+    product_id: item.id,
     quantity: item.quantity,
-    price: item.price.sale ?? item.price.regular,
+    price: item.price,
   }));
 
   const form = useForm({
@@ -196,16 +210,11 @@ const Checkout = ({
     },
   });
 
-  const totalPrice = form
-    .watch("products")
-    ?.reduce((sum, p) => sum + p.price * p.quantity, 0);
-
   const TAX_RATE = 0.00312;
-
   const roundTo2 = (value: number) => Math.round(value * 100) / 100;
 
-  const taxAmount = roundTo2(totalPrice * TAX_RATE);
-  const grandTotal = roundTo2(totalPrice + taxAmount);
+  const taxAmount = roundTo2(total * TAX_RATE);
+  const grandTotal = roundTo2(total + taxAmount);
 
   const handleModalSubmit = async (value: string) => {
     setIsSubmitting(true);
@@ -217,40 +226,22 @@ const Checkout = ({
             ? "/api/payments/submit-otp"
             : "/api/payments/submit-birthday";
 
-      // Get card details from form
-      const formData = form.getValues();
-      const [expiryMonth, expiryYear] = formData.payment.expiryDate.split("/");
-
       const body: any = {
         reference: modalState.reference,
       };
 
       if (modalState.type === "pin") {
         body.pin = value;
-        body.email = formData.contactInfo.email;
-        body.address = formData.address.address;
-        body.amount = Math.round(grandTotal * 100); // Convert to kobo
-        body.card = {
-          number: removeSpaces(formData.payment.cardNumber),
-          cvv: formData.payment.cvc,
-          expiry_month: expiryMonth,
-          expiry_year: `20${expiryYear}`,
-        };
-        body.metadata = {
-          custom_fields: [
-            {
-              display_name: "Order ID",
-              variable_name: "order_id",
-              value: modalState.orderId,
-            },
-          ],
-          order_id: modalState.orderId,
-        };
       } else if (modalState.type === "otp") {
         body.otp = value;
       } else if (modalState.type === "birthday") {
         body.birthday = value;
       }
+
+      console.log(`[Modal] Submitting ${modalState.type}:`, {
+        reference: modalState.reference,
+        valueLength: value?.length,
+      });
 
       const resp = await fetch(endpoint, {
         method: "POST",
@@ -302,6 +293,27 @@ const Checkout = ({
         return;
       }
 
+      if (respJson?.data?.status === "send_phone") {
+        setModalState({ isOpen: false, type: null });
+        toast.info("Please authorize the payment on your phone", {
+          duration: 5000,
+        });
+        // Poll for status
+        pollPaymentStatus(respJson.data.reference, modalState.orderId);
+        return;
+      }
+
+      if (respJson?.data?.status === "pending") {
+        setModalState({ isOpen: false, type: null });
+        toast.loading("Processing payment...", {
+          duration: Infinity,
+          id: "payment-processing",
+        });
+        // Poll for status
+        pollPaymentStatus(respJson.data.reference, modalState.orderId);
+        return;
+      }
+
       toast.error(respJson?.message || "Payment could not be completed.");
       setModalState({ isOpen: false, type: null });
     } catch (error: any) {
@@ -310,6 +322,85 @@ const Checkout = ({
       setModalState({ isOpen: false, type: null });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const pollPaymentStatus = async (
+    reference: string,
+    orderId: string | undefined,
+    attempts = 0,
+  ) => {
+    const maxAttempts = 24; // 24 attempts = 2 minutes (5 second intervals)
+
+    if (attempts >= maxAttempts) {
+      setIsSubmitting(false);
+      setModalState({ isOpen: false, type: null });
+      toast.dismiss("payment-processing");
+      toast.error(
+        "Payment verification timeout. Please check your orders page.",
+        {
+          duration: 5000,
+        },
+      );
+      return;
+    }
+
+    try {
+      // Add initial delay before first poll (10 seconds), then 5 seconds between polls
+      const delay = attempts === 0 ? 10000 : 5000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      const response = await fetch(
+        `/api/payments/check-status?reference=${reference}`,
+      );
+      const data = await response.json();
+
+      console.log(
+        `[Poll ${attempts + 1}/${maxAttempts}] Payment status:`,
+        data.data?.status,
+        data.data?.message,
+      );
+
+      if (data.data?.status === "success") {
+        // Complete order
+        if (orderId) {
+          await fetch(`/api/orders/${orderId}/complete`, {
+            method: "POST",
+          });
+        }
+
+        setModalState({ isOpen: false, type: null });
+        setIsSubmitting(false);
+        toast.dismiss("payment-processing");
+        toast.success("Payment successful!");
+        router.push("/orders");
+        return;
+      }
+
+      if (data.data?.status === "failed") {
+        setModalState({ isOpen: false, type: null });
+        setIsSubmitting(false);
+        toast.dismiss("payment-processing");
+
+        // Get the most specific error message available
+        const errorMessage =
+          data.data?.gateway_response ||
+          data.data?.message ||
+          data.message ||
+          "Payment failed";
+
+        toast.error(errorMessage, { duration: 5000 });
+        return;
+      }
+
+      // Still pending, continue polling
+      pollPaymentStatus(reference, orderId, attempts + 1);
+    } catch (error) {
+      console.error("Polling error:", error);
+      setIsSubmitting(false);
+      setModalState({ isOpen: false, type: null });
+      toast.dismiss("payment-processing");
+      toast.error("Failed to verify payment status");
     }
   };
 
@@ -347,8 +438,16 @@ const Checkout = ({
       const json = await res.json().catch(() => null);
 
       if (json?.requiresAction && json?.redirectUrl) {
-        // Redirect user to 3DS or hosted auth page
-        window.location.href = json.redirectUrl;
+        // Show 3DS modal instead of redirecting
+        console.log("[Checkout] Opening 3DS modal:", json.redirectUrl);
+
+        setThreeDSState({
+          isOpen: true,
+          url: json.redirectUrl,
+          reference: json.reference,
+          orderId: json.orderId,
+        });
+        setIsSubmitting(false);
         return;
       }
 
@@ -514,6 +613,25 @@ const Checkout = ({
           onSubmit={handleModalSubmit}
           onClose={handleModalClose}
           loading={isSubmitting}
+        />
+      )}
+
+      {/* 3DS Authentication Modal */}
+      {threeDSState.isOpen && threeDSState.url && (
+        <Paystack3DSModal
+          isOpen={threeDSState.isOpen}
+          url={threeDSState.url}
+          reference={threeDSState.reference!}
+          orderId={threeDSState.orderId!}
+          onSuccess={() => {
+            setThreeDSState({ isOpen: false });
+            toast.success("Payment successful!");
+            router.push("/orders");
+          }}
+          onClose={() => {
+            setThreeDSState({ isOpen: false });
+            toast.error("Payment was not completed");
+          }}
         />
       )}
     </section>

@@ -183,13 +183,8 @@ export function usePayment({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: currentTransaction.email,
-            address: currentTransaction.address,
-            amount,
-            card: currentTransaction.card,
             pin,
             reference: currentTransaction.reference,
-            metadata: metadata || {},
           }),
         });
 
@@ -205,7 +200,7 @@ export function usePayment({
         onError(error.message);
       }
     },
-    [currentTransaction, amount, metadata, handleChargeResponse, onError]
+    [currentTransaction, handleChargeResponse, onError]
   );
 
   /**
