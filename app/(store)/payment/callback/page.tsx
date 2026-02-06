@@ -4,8 +4,8 @@ import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
+// Only use dynamic for client component pages
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default function PaymentCallbackPage() {
   return (
@@ -37,7 +37,6 @@ function CallbackBody() {
       reference = sessionStorage.getItem('pending_reference') || reference;
       orderId = sessionStorage.getItem('pending_order_id') || orderId;
 
-      // optional cleanup
       sessionStorage.removeItem('pending_reference');
       sessionStorage.removeItem('pending_order_id');
     }
@@ -45,7 +44,10 @@ function CallbackBody() {
 
   useEffect(() => {
     const verify = async () => {
-      if (!reference) return;
+      if (!reference) {
+        window.location.href = '/checkout';
+        return;
+      }
 
       try {
         const res = await fetch(`/api/payments/check-status?reference=${reference}`);
@@ -59,7 +61,6 @@ function CallbackBody() {
           }
           window.location.href = '/orders';
         } else if (data?.data?.status === 'pending') {
-          // If still pending, keep user on the page or send them to orders to refresh
           setTimeout(() => {
             window.location.href = '/orders';
           }, 1500);
@@ -73,7 +74,7 @@ function CallbackBody() {
 
     verify();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reference, orderId]);
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
