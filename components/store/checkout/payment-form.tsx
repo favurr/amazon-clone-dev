@@ -1,21 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
-  FieldTitle,
-  FieldLabel,
+  FieldLabel
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { usePayment } from "@/hooks/use-payment";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { paymentService } from "@/lib/payment-service";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 
 const cardSchema = z.object({
   cardNumber: z
@@ -46,15 +44,19 @@ const cardSchema = z.object({
 type CardFormData = z.infer<typeof cardSchema>;
 
 interface PaymentFormProps {
+  // Amount in Naira for display; we'll convert to kobo for Paystack
   amount: number;
-  customerId: string;
-  onSuccess: (paymentMethodId: string) => void;
+  // Optional customer details (required for initialize)
+  customerEmail?: string;
+  customerAddress?: string;
+  onSuccess: (reference: string) => void;
   onError: (error: Error) => void;
 }
 
 export function PaymentForm({
   amount,
-  customerId,
+  customerEmail,
+  customerAddress,
   onSuccess,
   onError,
 }: PaymentFormProps) {
@@ -64,22 +66,41 @@ export function PaymentForm({
     resolver: zodResolver(cardSchema),
   });
 
+  // Wire up the Paystack payment hook
+  const {
+    modalState,
+    initializePayment,
+    submitPin,
+    submitOtp,
+    submitBirthday,
+    closeModal,
+  } = usePayment({
+    // Paystack expects amount in kobo
+    amount: Math.round(amount * 100),
+    onSuccess: (reference) => onSuccess(reference),
+    onError: (message) => onError(new Error(message)),
+  });
+
   const onSubmit = async (data: CardFormData) => {
     try {
       setLoading(true);
 
+      if (!customerEmail || !customerAddress) {
+        throw new Error("Missing customer email or address");
+      }
+
       // Extract month and year from expiry date
       const [month, year] = data.expiryDate.split("/");
 
-      const result = await paymentService.tokenizeCard({
-        customerId,
-        cardNumber: data.cardNumber.replace(/\s/g, ""),
-        cvv: data.cvv,
-        expiryMonth: month,
-        expiryYear: `20${year}`,
-      });
-
-      onSuccess(result.paymentMethodId);
+      await initializePayment(
+        { email: customerEmail, address: customerAddress },
+        {
+          number: data.cardNumber.replace(/\s/g, ""),
+          cvv: data.cvv,
+          expiry_month: month.trim(),
+          expiry_year: `20${year.trim()}`,
+        }
+      );
     } catch (err) {
       console.error("PAYMENT_ERROR", err);
       onError(err as Error);
@@ -174,6 +195,12 @@ export function PaymentForm({
       <p className="text-xs text-center text-muted-foreground mt-4">
         Your card information is secure and encrypted
       </p>
+
+      {/* Optional: inline modals if this form is used standalone.
+          If your checkout.tsx already renders modals, you can remove this block. */}
+      {modalState.isOpen && modalState.type && (
+        <div />
+      )}
     </form>
   );
 }
