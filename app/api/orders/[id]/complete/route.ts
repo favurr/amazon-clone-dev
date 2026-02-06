@@ -3,10 +3,10 @@ import prisma from "@/lib/prisma";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id: orderId } = await params;
 
     // Update order status
     await prisma.order.update({
