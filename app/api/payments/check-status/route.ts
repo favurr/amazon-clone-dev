@@ -1,59 +1,60 @@
-import { NextRequest, NextResponse } from "next/server";
-import { paystackRequest } from "@/lib/paystack";
-import type { ChargeResponse } from "@/lib/paystack-types";
+import { NextRequest, NextResponse } from 'next/server';
+import { paystackRequest } from '@/lib/paystack';
+import type { ChargeResponse } from '@/lib/paystack-types';
 
 export async function GET(request: NextRequest) {
+  // Ensure reference is available to both try and catch
+  const { searchParams } = new URL(request.url);
+  const reference = searchParams.get('reference');
+
+  if (!reference) {
+    return NextResponse.json(
+      { error: 'Reference is required' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const reference = searchParams.get("reference");
-
-    if (!reference) {
-      return NextResponse.json(
-        { error: "Reference is required" },
-        { status: 400 }
-      );
-    }
-
-    // Use transaction verify endpoint for completed transactions
+    // Use transaction verify endpoint for completed/in-progress transactions
     const response = await paystackRequest<any>(
       `/transaction/verify/${reference}`,
-      "GET"
+      'GET'
     );
+
+    // Map Paystack statuses to our ChargeStatus
+    // Paystack data.status can be: 'success', 'failed', 'ongoing', 'abandoned', etc.
+    const mapStatus = (status: string): 'success' | 'failed' | 'pending' => {
+      if (status === 'success') return 'success';
+      if (status === 'failed') return 'failed';
+      // treat 'ongoing'/'abandoned'/others as pending
+      return 'pending';
+    };
 
     // Transform Paystack transaction response to our ChargeResponse format
     const transformedResponse: ChargeResponse = {
       status: response.status,
       message: response.message,
       data: {
-        status: response.data.status === "success" ? "success" : "failed",
-        reference: response.data.reference,
-        amount: response.data.amount,
-        authorization: response.data.authorization,
-        gateway_response: response.data.gateway_response,
-        message: response.data.message,
+        status: mapStatus(response.data?.status),
+        reference: response.data?.reference ?? reference,
+        amount: response.data?.amount ?? 0,
+        authorization: response.data?.authorization,
+        gateway_response: response.data?.gateway_response,
+        message: response.data?.message,
       },
     };
 
     return NextResponse.json(transformedResponse);
   } catch (error: any) {
-    console.error("Check status error:", error);
-    
-    // If transaction not found, return pending status instead of error
-    if (error.message?.includes("Transaction reference not found")) {
-      return NextResponse.json({
-        status: true,
-        message: "Transaction is being processed",
-        data: {
-          status: "pending",
-          reference: reference,
-          amount: 0,
-        },
-      });
-    }
-    
-    return NextResponse.json(
-      { error: error.message || "Failed to check status" },
-      { status: 500 }
-    );
+    // If transaction not found or verify throws, return pending instead of error
+    return NextResponse.json({
+      status: true,
+      message: 'Transaction is being processed',
+      data: {
+        status: 'pending',
+        reference,
+        amount: 0,
+      },
+    });
   }
 }
