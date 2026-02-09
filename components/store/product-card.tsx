@@ -50,17 +50,17 @@ export function ProductCard({
   if (compact) {
     return (
       <Link href={`/products/${product.slug}`} className="group block">
-        <Card className="relative mx-auto w-full max-w-sm pt-0">
+        <Card className="relative mx-auto w-full max-w-sm pt-0 hover:shadow-lg transition-shadow">
           <img
             src={product.mainImageUrl}
             alt={product.title}
-            className="relative z-20 aspect-video w-full object-contain"
+            className="relative z-20 aspect-video w-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
 
           {discount > 0 && (
             <Badge
               variant="secondary"
-              className="absolute top-1 left-1 bg-[#c7511f] text-white text-xs font-bold px-2 py-0.5 rounded"
+              className="absolute top-1 left-1 bg-[#c7511f] text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded"
             >
               -{discount}%
             </Badge>
@@ -68,26 +68,26 @@ export function ProductCard({
 
           {!inStock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-white text-xs font-semibold px-2 py-1 rounded">
+              <span className="bg-white text-[10px] sm:text-xs font-semibold px-2 py-1 rounded">
                 Out of Stock
               </span>
             </div>
           )}
 
-          <CardHeader>
+          <CardHeader className="p-2 sm:p-3 md:p-4">
             <CardAction></CardAction>
-            <CardTitle className="text-sm text-[#0F1111] line-clamp-2 mb-2 min-h-10">
+            <CardTitle className="text-xs sm:text-sm text-[#0F1111] line-clamp-2 mb-1 sm:mb-2 min-h-8 sm:min-h-10">
               {product.title}
             </CardTitle>
             <CardDescription>
               {product._count && product._count.reviews > 0 && (
-                <div className="flex z-50 items-center gap-1 mb-2">
+                <div className="flex z-50 items-center gap-0.5 sm:gap-1 mb-1 sm:mb-2">
                   <div className="flex">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
                         className={cn(
-                          "h-3 w-3",
+                          "h-2.5 w-2.5 sm:h-3 sm:w-3",
                           i < 4
                             ? "fill-[#ff9900] text-[#ff9900]"
                             : "text-slate-300",
@@ -95,26 +95,26 @@ export function ProductCard({
                       />
                     ))}
                   </div>
-                  <span className="text-xs text-[#007185]">
+                  <span className="text-[10px] sm:text-xs text-[#007185]">
                     {product._count.reviews}
                   </span>
                 </div>
               )}
             </CardDescription>
           </CardHeader>
-          <CardFooter className="flex px-3 flex-col">
+          <CardFooter className="flex px-2 sm:px-3 pb-2 sm:pb-3 flex-col">
           
             <div className="flex relative justify-between items-baseline w-full">
               {product.discountedPrice && (
-            <span className="text-xs absolute -top-4 left-0.5 text-[#565959] line-through">
+            <span className="text-[10px] sm:text-xs absolute -top-3 sm:-top-4 left-0.5 text-[#565959] line-through">
               ${product.titlePrice.toFixed(2)}
             </span>
           )}
-              <span className="text-xl font-semibold text-[#B12704]">
+              <span className="text-base sm:text-lg md:text-xl font-semibold text-[#B12704]">
                 ${finalPrice.toFixed(2)}
               </span>
               {inStock && (
-                <p className="text-xs text-[#007600] mt-1 font-light">
+                <p className="text-[10px] sm:text-xs text-[#007600] mt-1 font-light hidden sm:block">
                   FREE Delivery
                 </p>
               )}

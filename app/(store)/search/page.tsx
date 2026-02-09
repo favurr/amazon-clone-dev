@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/store/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tag, FolderOpen, Package } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 type SearchPageProps = {
   searchParams: Promise<{
@@ -77,14 +78,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <div className="space-y-6">
             {/* Categories Section */}
             {categories.length > 0 && (
-              <div className="bg-white rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
+              <Card className="bg-white rounded-lg p-6">
+                <CardHeader className="flex items-center gap-2 mb-4">
                   <FolderOpen className="w-5 h-5 text-[#c45500]" />
                   <h2 className="text-xl font-semibold">
                     Categories ({categories.length})
                   </h2>
-                </div>
-                <div className="flex flex-wrap gap-2">
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-2">
                   {categories.map((category) => (
                     <Link
                       key={category.id}
@@ -99,20 +100,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </Badge>
                     </Link>
                   ))}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Tags Section */}
             {tags.length > 0 && (
-              <div className="bg-white rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
+              <Card className="bg-white rounded-lg">
+                <CardHeader className="flex items-center gap-2">
                   <Tag className="w-5 h-5 text-[#c45500]" />
                   <h2 className="text-xl font-semibold">
                     Related Tags ({tags.length})
                   </h2>
-                </div>
-                <div className="flex flex-wrap gap-2">
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
                     <Link
                       key={tag.id}
@@ -127,8 +128,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </Badge>
                     </Link>
                   ))}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Products Section */}

@@ -437,10 +437,8 @@ export function ProductDetailClient({
             <h2 className="text-2xl font-bold text-slate-900 mb-4">
               Product Description
             </h2>
-            <div className="prose max-w-none">
-              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
-                {product.description}
-              </p>
+            <div className="max-w-none">
+              <article className="prose mx-auto prose-headings:font-sans prose-headings:font-bold prose-headings:text-[var(--color-primary)] prose-a:text-[var(--color-primary)] prose-a:no-underline hover:prose-a:text-[var(--color-primary-foreground)] prose-blockquote:border-l-[4px] prose-blockquote:border-[var(--color-accent)] prose-blockquote:pl-4 prose-code:bg-[var(--color-muted)] prose-code:text-[var(--color-destructive)] prose-pre:bg-[var(--color-card)] prose-pre:text-[var(--color-card-foreground)] prose-img:rounded-md" dangerouslySetInnerHTML={{ __html: product.description }} />
             </div>
           </div>
 

@@ -1,13 +1,11 @@
-import { Suspense } from "react";
-import Link from "next/link";
 import { getLandingData } from "@/actions/store";
+import { FeaturedCard } from "@/components/store/featured-card";
 import { ProductCard } from "@/components/store/product-card";
-import { CategoryCard } from "@/components/store/category-card";
-import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import Image from "next/image";
-import { FeaturedCard } from "@/components/store/featured-card";
+import Link from "next/link";
+import { Suspense } from "react";
 
 export default async function HomePage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -15,27 +13,27 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#eaeded]">
-      {/* Hero Banner - Amazon Style */}
-      <section className="relative h-[400px] bg-gradient-to-b from-[#37475a] to-[#232f3e] overflow-hidden">
+      {/* Hero Banner - Responsive */}
+      <section className="relative h-50 sm:h-100 md:h-150 lg:h-250 overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="/home/home.jpg"
+            src="/home/Artboard-2.jpg"
             alt="Hero background"
             fill
-            className="object-cover opacity-30"
+            className="object-cover"
             priority
           />
         </div>
 
         {/* Fade to background color */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#eaeded]" />
+        <div className="absolute bottom-0 left-0 right-0 h-12 sm:h-16 md:h-64 bg-linear-to-b from-transparent via-[#fbfcfc] to-[#eaeded]" />
       </section>
 
-      {/* Main Content - Negative margin to overlap hero */}
-      <div className="relative -mt-10 pb-12">
-        <div className="max-w-[1500px] mx-auto px-5">
-          {/* SECTION 1: Category Grid (4 boxes) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+      {/* Main Content - Responsive negative margin */}
+      <div className="relative -mt-24 sm:-mt-26 md:-mt-75 lg:-mt-125 pb-6 sm:pb-8 md:pb-12">
+        <div className="max-w-375 lg:max-w-[100%] mx-auto px-3 sm:px-4 md:px-5 lg:px-8">
+          {/* SECTION 1: Category Grid - Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 mb-3 sm:mb-4 md:mb-5">
             <Suspense fallback={<CategoryBoxSkeleton />}>
               <CategoryBox
                 title="Finds for Home"
@@ -123,18 +121,18 @@ export default async function HomePage() {
             <TopCategoriesSection userId={userId} />
           </Suspense>
 
-          {/* SECTION 6: Deals & Promotions */}
-          <div className="bg-white p-6 mb-5 rounded-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Today's Deals</h2>
+          {/* SECTION 6: Deals & Promotions - Responsive */}
+          <div className="bg-white p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-5 rounded-md">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-bold">Today's Deals</h2>
               <Link
                 href="/products"
-                className="text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
+                className="text-xs sm:text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
               >
                 See all deals
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
               <Suspense
                 fallback={
                   <div className="h-48 bg-slate-100 animate-pulse rounded" />
@@ -194,17 +192,17 @@ async function FeaturedProductsSection({ userId }: { userId?: string }) {
   const displayProducts = data.featured.slice(0, 10); // 5x2 = 10 products
 
   return (
-    <div className="bg-white p-6 mb-5 rounded-md">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Featured Products</h2>
+    <div className="bg-white p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-5 rounded-md">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl font-bold">Featured Products</h2>
         <Link
           href="/products?featured=true"
-          className="text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
+          className="text-xs sm:text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
         >
           See more
         </Link>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {displayProducts.map((product, index) => {
           // First product - hero card (2 columns)
           if (index === 0) {
@@ -254,17 +252,17 @@ async function NewArrivalsSection({ userId }: { userId?: string }) {
   const displayProducts = data.latest.slice(0, 10);
 
   return (
-    <div className="bg-white p-6 mb-5 rounded-md">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">New Arrivals</h2>
+    <div className="bg-white p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-5 rounded-md">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl font-bold">New Arrivals</h2>
         <Link
           href="/products?sort=newest"
-          className="text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
+          className="text-xs sm:text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
         >
           See more
         </Link>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         {displayProducts.map((product) => (
           <ProductCard
             key={product.id}
@@ -285,17 +283,17 @@ async function TopCategoriesSection({ userId }: { userId?: string }) {
   if (data.categories.length === 0) return null;
 
   return (
-    <div className="bg-white p-6 mb-5 rounded-md">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Shop by Category</h2>
+    <div className="bg-white p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-5 rounded-md">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl font-bold">Shop by Category</h2>
         <Link
           href="/products"
-          className="text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
+          className="text-xs sm:text-sm text-[#007185] hover:text-[#c7511f] hover:underline"
         >
           See all categories
         </Link>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         {data.categories.slice(0, 10).map((category) => (
           <Link
             key={category.id}
@@ -415,9 +413,9 @@ function CategoryBoxSkeleton() {
 
 function ProductGridSkeleton({ title }: { title: string }) {
   return (
-    <div className="bg-white p-6 mb-5 rounded-md">
-      <h2 className="text-xl font-bold mb-4">{title}</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="bg-white p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-5 rounded-md">
+      <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">{title}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="animate-pulse">
             <div className="aspect-square bg-slate-200 rounded mb-2" />

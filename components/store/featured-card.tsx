@@ -52,33 +52,31 @@ export function FeaturedCard({
   const finalPrice = product.discountedPrice || product.titlePrice;
   const inStock = (product.totalStock || 0) > 0;
 
-  // Hero variant - large card (takes 2 columns)
+  // Hero variant - large card (takes 2 columns) - Responsive
   if (variant === "hero") {
     return (
-      <Link href={`/products/${product.slug}`} className={cn("group block col-span-2", className)}>
-        <Card className="relative h-70 py-0 overflow-hidden bg-white shadow-sm hover:shadow-lg transition-shadow">
+      <Link href={`/products/${product.slug}`} className={cn("group block sm:col-span-2", className)}>
+        <Card className="relative h-auto sm:h-70 py-0 overflow-hidden bg-white shadow-sm hover:shadow-lg transition-shadow">
           {discount > 0 && (
-            <Badge className="absolute top-4 left-4 z-10 bg-[#c7511f] text-white">
+            <Badge className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 bg-[#c7511f] text-white text-xs sm:text-sm">
               -{discount}%
             </Badge>
           )}
           
-          <div className="flex h-full">
+          <div className="flex flex-col sm:flex-row h-full">
             
             {/* Content Section */}
-            <div className="flex-1 px-4 py-auto flex flex-col justify-center items-center">
+            <div className="flex-1 px-3 py-4 sm:px-4 sm:py-auto flex flex-col justify-center items-center">
               <div>
-                <h3 className="text-xl font-bold text-[#0F1111] mb-3 line-clamp-2">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-[#0F1111] mb-2 sm:mb-3 line-clamp-2">
                   {product.title}
                 </h3>
-                <div className="text-sm text-[#565959] mb-4 line-clamp-3">
-                  {product.description || "Discover amazing features and quality with this premium product."}
-                </div>
+                <div className="text-xs sm:text-sm text-[#565959] mb-2 sm:mb-4 line-clamp-2 sm:line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description || "Discover amazing features and quality with this premium product." }} />
               </div>
             </div>
 
             {/* Image Section */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-h-[200px] sm:min-h-full">
               <img
                 src={product.mainImageUrl}
                 alt={product.title}
@@ -91,31 +89,29 @@ export function FeaturedCard({
     );
   }
 
-  // Overlay variant - background image with text overlay
+  // Overlay variant - background image with text overlay - Responsive
   if (variant === "overlay") {
     return (
       <Link href={`/products/${product.slug}`} className={cn("group block", className)}>
-        <Card className="relative h-70 overflow-hidden bg-gray-900">
+        <Card className="relative h-48 sm:h-60 md:h-70 overflow-hidden bg-gray-900">
           {/* Background Image */}
           <div className="absolute inset-0">
             <img
               src={product.mainImageUrl}
               alt={product.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {/* Dark blur overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
           </div>
           
           {/* Content Overlay - Bottom Left */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold line-clamp-2">
+          <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-6 text-white z-10">
+            <div className="space-y-1 sm:space-y-2">
+              <h3 className="text-sm sm:text-base md:text-lg font-bold line-clamp-2">
                 {product.title}
               </h3>
-              <p className="text-xs text-gray-200 line-clamp-2">
-                {product.description || "Premium quality product"}
-              </p>
+              <span className="text-[10px] sm:text-xs text-gray-200 line-clamp-1 sm:line-clamp-2" dangerouslySetInnerHTML={{ __html: product.description || "Experience the perfect blend of style and functionality with this top-rated product." }} />
             </div>
           </div>
         </Card>
