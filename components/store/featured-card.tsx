@@ -56,7 +56,7 @@ export function FeaturedCard({
   if (variant === "hero") {
     return (
       <Link href={`/products/${product.slug}`} className={cn("group block sm:col-span-2", className)}>
-        <Card className="relative h-auto sm:h-70 py-0 overflow-hidden bg-white shadow-sm hover:shadow-lg transition-shadow">
+        <Card className="relative h-auto sm:h-70 py-0 overflow-hidden bg-white shadow-sm transition-shadow">
           {discount > 0 && (
             <Badge className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 bg-[#c7511f] text-white text-xs sm:text-sm">
               -{discount}%
@@ -99,7 +99,7 @@ export function FeaturedCard({
             <img
               src={product.mainImageUrl}
               alt={product.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover transition-transform duration-300"
             />
             {/* Dark blur overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />

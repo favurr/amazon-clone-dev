@@ -12,9 +12,10 @@ interface ImageUploaderProps {
   onRemove?: () => void;
   value?: string;
   multiple?: boolean;
+  folder?: string;
 }
 
-export function ImageUploader({ onSuccess, onRemove, value, multiple = false }: ImageUploaderProps) {
+export function ImageUploader({ onSuccess, onRemove, value, multiple = false, folder = "/amazon/products" }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const alert = useAlert();
@@ -39,7 +40,7 @@ export function ImageUploader({ onSuccess, onRemove, value, multiple = false }: 
           ...auth,
           file,
           fileName: file.name,
-          folder: "/amazon/products",
+          folder: folder,
           useUniqueFileName: true,
         });
 

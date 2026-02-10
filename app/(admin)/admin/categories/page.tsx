@@ -59,6 +59,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { GlobalAlert } from "@/components/tools/global-alert";
+import Image from "next/image";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -109,32 +110,40 @@ export default function CategoriesPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  // Use startTransition to handle the loading state properly
-  startTransition(async () => {
-    try {
-      const result = editMode 
-        ? await updateCategory(selectedCategory.id, name, isActive)
-        : await createCategory(name);
-      
-      console.log("Server Response:", result); // Debugging line
+    e.preventDefault();
 
-      if (result && result.success) {
-        alert.success(`Category ${editMode ? 'updated' : 'created'}`, "floating");
-        closeModal(); // This MUST be called here
-        
-        // Force a refresh of the local state
-        await fetchData(); 
-      } else {
-        alert.error(result?.error || "Action failed", "floating");
+    // Use startTransition to handle the loading state properly
+    startTransition(async () => {
+      try {
+        const result = editMode
+          ? await updateCategory(
+              selectedCategory.id,
+              selectedCategory.imageUrl,
+              name,
+              isActive,
+            )
+          : await createCategory(name);
+
+        console.log("Server Response:", result); // Debugging line
+
+        if (result && result.success) {
+          alert.success(
+            `Category ${editMode ? "updated" : "created"}`,
+            "floating",
+          );
+          closeModal(); // This MUST be called here
+
+          // Force a refresh of the local state
+          await fetchData();
+        } else {
+          alert.error(result?.error || "Action failed", "floating");
+        }
+      } catch (err) {
+        console.error("Client Error:", err);
+        alert.error("A network error occurred.");
       }
-    } catch (err) {
-      console.error("Client Error:", err);
-      alert.error("A network error occurred.");
-    }
-  });
-};
+    });
+  };
 
   const confirmDelete = async () => {
     if (!selectedCategory) return;
@@ -172,7 +181,7 @@ export default function CategoriesPage() {
 
       {/* --- FORM DIALOG --- */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <GlobalAlert />
+        <GlobalAlert />
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-xl">
@@ -195,6 +204,21 @@ export default function CategoriesPage() {
                 placeholder="e.g. Smart Home Electronics"
                 className="focus-visible:ring-orange-500"
                 required
+              />
+            </div>
+
+            <div className="relative aspect-square w-full rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+              <Image
+                src={selectedCategory?.imageUrl}
+                fill
+                className="object-contain p-2"
+                alt="Preview"
+                unoptimized
+              />
+              <Input
+                placeholder="Paste main image URL..."
+                className="h-9 text-xs"
+                value={selectedCategory.imageUrl ?? ""}
               />
             </div>
 

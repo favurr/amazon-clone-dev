@@ -79,7 +79,8 @@ export async function createCategory(name: string) {
 export async function updateCategory(
   id: string,
   name: string,
-  isActive: boolean
+  imageUrl: string,
+  isActive: boolean,
 ) {
   try {
     // FIX: We must await the slug generation
@@ -90,6 +91,7 @@ export async function updateCategory(
       data: {
         name,
         slug,
+        imageUrl,
         isActive,
       },
     });

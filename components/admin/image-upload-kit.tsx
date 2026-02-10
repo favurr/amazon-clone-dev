@@ -9,9 +9,10 @@ interface ImageUploadKitProps {
   productId?: string;
   value: any[]; 
   onChange: (value: any[]) => void;
+  folder?: string;
 }
 
-export function ImageUploadKit({ productId, value, onChange }: ImageUploadKitProps) {
+export function ImageUploadKit({ productId, value, onChange, folder = "/amazon/products" }: ImageUploadKitProps) {
   const [images, setImages] = useState<any[]>([]);
   const isFetched = useRef(false);
 
@@ -68,7 +69,7 @@ export function ImageUploadKit({ productId, value, onChange }: ImageUploadKitPro
           ))}
         </div>
       )}
-      <ImageUploader multiple onSuccess={handleBatchUpload} />
+      <ImageUploader multiple onSuccess={handleBatchUpload} folder={folder} />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { Currency, CurrencyValue } from "../currency";
 
 interface ProductCardProps {
   product: {
@@ -50,11 +51,11 @@ export function ProductCard({
   if (compact) {
     return (
       <Link href={`/products/${product.slug}`} className="group block">
-        <Card className="relative mx-auto w-full max-w-sm pt-0 hover:shadow-lg transition-shadow">
+        <Card className="relative mx-auto w-full max-w-sm pt-0 transition-shadow">
           <img
             src={product.mainImageUrl}
             alt={product.title}
-            className="relative z-20 aspect-video w-full object-contain group-hover:scale-105 transition-transform duration-300"
+            className="relative z-20 aspect-video w-full object-contain"
           />
 
           {discount > 0 && (
@@ -106,18 +107,17 @@ export function ProductCard({
           
             <div className="flex relative justify-between items-baseline w-full">
               {product.discountedPrice && (
-            <span className="text-[10px] sm:text-xs absolute -top-3 sm:-top-4 left-0.5 text-[#565959] line-through">
-              ${product.titlePrice.toFixed(2)}
+            <span className="text-[10px] absolute -top-3 sm:-top-4 left-0.5 text-[#565959]">
+              <Currency>
+                <CurrencyValue value={product.titlePrice} className="line-through" />
+              </Currency>
             </span>
           )}
-              <span className="text-base sm:text-lg md:text-xl font-semibold text-[#B12704]">
-                ${finalPrice.toFixed(2)}
+              <span className="text-lg font-normal text-[#B12704]">
+                <Currency>
+                  <CurrencyValue value={finalPrice} />
+                </Currency>
               </span>
-              {inStock && (
-                <p className="text-[10px] sm:text-xs text-[#007600] mt-1 font-light hidden sm:block">
-                  FREE Delivery
-                </p>
-              )}
             </div>
           </CardFooter>
         </Card>

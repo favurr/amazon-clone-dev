@@ -1,4 +1,5 @@
 import { getLandingData } from "@/actions/store";
+import { Currency, CurrencyValue } from "@/components/currency";
 import { FeaturedCard } from "@/components/store/featured-card";
 import { ProductCard } from "@/components/store/product-card";
 import { auth } from "@/lib/auth";
@@ -14,8 +15,8 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-[#eaeded]">
       {/* Hero Banner - Responsive */}
-      <section className="relative h-50 sm:h-100 md:h-150 lg:h-250 overflow-hidden">
-        <div className="absolute inset-0">
+      <section className="relative h-[200px] sm:h-[300px] md:h-[400px] bg-gradient-to-b from-[#37475a] to-[#232f3e] overflow-hidden">
+        <div className="absolute inset-0 top-0 left-0 right-0 h-full">
           <Image
             src="/home/Artboard-2.jpg"
             alt="Hero background"
@@ -26,19 +27,19 @@ export default async function HomePage() {
         </div>
 
         {/* Fade to background color */}
-        <div className="absolute bottom-0 left-0 right-0 h-12 sm:h-16 md:h-64 bg-linear-to-b from-transparent via-[#fbfcfc] to-[#eaeded]" />
+        <div className="absolute bottom-0 left-0 right-0 h-12 sm:h-16 md:h-24 bg-gradient-to-b from-transparent to-[#eaeded]" />
       </section>
 
       {/* Main Content - Responsive negative margin */}
-      <div className="relative -mt-24 sm:-mt-26 md:-mt-75 lg:-mt-125 pb-6 sm:pb-8 md:pb-12">
-        <div className="max-w-375 lg:max-w-[100%] mx-auto px-3 sm:px-4 md:px-5 lg:px-8">
+      <div className="relative -mt-6 sm:-mt-16 md:-mt-25 pb-6 sm:pb-8 md:pb-12">
+        <div className="max-w-[1500px] mx-auto px-3 sm:px-4 md:px-5">
           {/* SECTION 1: Category Grid - Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 mb-3 sm:mb-4 md:mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5 mb-3 sm:mb-4 md:mb-5">
             <Suspense fallback={<CategoryBoxSkeleton />}>
               <CategoryBox
                 title="Finds for Home"
                 category="home"
-                image="/home/homepod.png"
+                image="https://ik.imagekit.io/favurr/amazon/landing/home_finds.jpg"
                 linkText="Explore home essentials"
               />
             </Suspense>
@@ -46,7 +47,7 @@ export default async function HomePage() {
               <CategoryBox
                 title="Home & Kitchen essentials"
                 category="kitchen"
-                image="/home/watch.png"
+                image="https://ik.imagekit.io/favurr/amazon/landing/kitchen_essentials.jpg"
                 linkText="Shop kitchen must-haves"
               />
             </Suspense>
@@ -54,7 +55,7 @@ export default async function HomePage() {
               <CategoryBox
                 title="Level up your PC here"
                 category="computing"
-                image="/products/product1.png"
+                image="https://ik.imagekit.io/favurr/amazon/landing/elevate_pc.jpg"
                 linkText="See more computing"
               />
             </Suspense>
@@ -62,7 +63,7 @@ export default async function HomePage() {
               <CategoryBox
                 title="Elevate your Electronics"
                 category="electronics"
-                image="/products/product2.webp"
+                image="https://ik.imagekit.io/favurr/amazon/landing/electronics.jpg"
                 linkText="Discover electronics"
               />
             </Suspense>
@@ -75,13 +76,13 @@ export default async function HomePage() {
             <FeaturedProductsSection userId={userId} />
           </Suspense>
 
-          {/* SECTION 3: Another Category Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+          {/* SECTION 3: Another Category Grid - Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 mb-3 sm:mb-4 md:mb-5">
             <Suspense fallback={<CategoryBoxSkeleton />}>
               <CategoryBox
                 title="Gaming paradise"
                 category="gaming"
-                image="/products/product3.webp"
+                image="https://ik.imagekit.io/favurr/amazon/products/download__8__Y9quNhJTC.jfif"
                 linkText="Level up your game"
               />
             </Suspense>
@@ -89,7 +90,7 @@ export default async function HomePage() {
               <CategoryBox
                 title="Best Sellers in Fashion"
                 category="fashion"
-                image="/home/farzi.jpg"
+                image="https://ik.imagekit.io/favurr/amazon/landing/tees.jpg"
                 linkText="Shop clothing & shoes"
               />
             </Suspense>
@@ -97,7 +98,7 @@ export default async function HomePage() {
               <CategoryBox
                 title="Tech deals"
                 category="electronics"
-                image="/trust/trust1.png"
+                image="https://ik.imagekit.io/favurr/amazon/landing/tech_deals.jpg"
                 linkText="See all tech deals"
               />
             </Suspense>
@@ -105,7 +106,7 @@ export default async function HomePage() {
               <CategoryBox
                 title="Gift Cards"
                 category="gifts"
-                image="/home/gift-card.png"
+                image="https://ik.imagekit.io/favurr/amazon/landing/gift_cards.jpg"
                 linkText="Shop gift cards"
               />
             </Suspense>
@@ -169,7 +170,7 @@ async function CategoryBox({
 }) {
   return (
     <div className="bg-white p-5 rounded-md h-[420px] flex flex-col">
-      <h2 className="text-xl font-bold mb-3 text-[#0F1111]">{title}</h2>
+      <h2 className="text-xl font-bold truncate mb-3 text-[#0F1111]">{title}</h2>
       <div className="flex-1 relative mb-4">
         <Image src={image} alt={title} fill className="object-cover rounded" />
       </div>
@@ -298,17 +299,27 @@ async function TopCategoriesSection({ userId }: { userId?: string }) {
           <Link
             key={category.id}
             href={`/products?category=${category.id}`}
-            className="group border border-[#ddd] rounded p-4 hover:shadow-md transition-shadow bg-white"
+            className="group border border-[#ddd] rounded p-2 sm:p-3 md:p-4 hover:shadow-lg transition-all bg-white"
           >
-            <div className="aspect-square bg-slate-100 rounded mb-3 relative overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-slate-300">
-                {category.name.charAt(0)}
-              </div>
+            <div className="aspect-square bg-slate-100 rounded mb-2 sm:mb-3 relative overflow-hidden">
+              {category.imageUrl ? (
+                <Image
+                  src={category.imageUrl}
+                  alt={category.name}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold text-slate-300">
+                  {category.name.charAt(0)}
+                </div>
+              )}
             </div>
-            <h3 className="font-semibold text-sm text-[#0F1111] mb-1 line-clamp-2">
+            <h3 className="font-semibold text-xs sm:text-sm text-[#0F1111] mb-1 line-clamp-2 group-hover:text-[#c7511f] transition-colors">
               {category.name}
             </h3>
-            <p className="text-xs text-[#565959]">
+            <p className="text-[10px] sm:text-xs text-[#565959]">
               {category._count.products} items
             </p>
           </Link>
@@ -341,7 +352,7 @@ async function DealsSection({ userId }: { userId?: string }) {
               src={product.mainImageUrl}
               alt={product.title}
               fill
-              className="object-cover group-hover:scale-105 transition-transform"
+              className="object-cover transition-transform"
             />
             {product.discountedPrice && (
               <div className="absolute top-2 left-2 bg-[#c7511f] text-white text-xs font-bold px-2 py-1 rounded">
@@ -356,7 +367,9 @@ async function DealsSection({ userId }: { userId?: string }) {
             )}
           </div>
           <p className="text-sm font-semibold text-[#c7511f] mb-1">
-            ${(product.discountedPrice ?? product.titlePrice).toFixed(2)}
+            <Currency>
+              <CurrencyValue value={Number((product.discountedPrice ?? product.titlePrice).toFixed(2))} />
+            </Currency>
           </p>
           <p className="text-xs text-[#0F1111] line-clamp-2">{product.title}</p>
         </Link>
