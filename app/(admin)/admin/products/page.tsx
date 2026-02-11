@@ -29,7 +29,7 @@ import {
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { deleteProduct, getAdminProducts } from "@/actions/product";
+import { deleteProduct, getAdminProducts, deleteProducts } from "@/actions/product";
 import {
   Table,
   TableBody,
@@ -171,6 +171,19 @@ export default function ProductsPage() {
         loadProducts();
       } else {
         toast.error(res.error || "Failed to delete product");
+      }
+    });
+  };
+  
+  const handleDeleteSelected = async () => {
+    startTransition(async () => {
+      const res = await deleteProducts(selectedProducts);
+      if (res.success) {
+        toast.success("Selected products deleted");
+        loadProducts();
+        setSelectedProducts([]);
+      } else {
+        toast.error(res.error || "Failed to delete selected products");
       }
     });
   };
@@ -337,11 +350,11 @@ export default function ProductsPage() {
                 Refresh
               </Button>
 
-              <Button variant="outline" size="sm" className="h-10 gap-2">
+              <Button variant="outline" size="sm" className="h-10 gap-2" onClick={() => handleDeleteSelected()}>
                 <Trash className="h-4 w-4" />
                 {selectedProducts.length > 0
                   ? `Delete ${selectedProducts.length}`
-                  : "Delete"}
+                  : `${selectedProducts.length} Selected`}
               </Button>
             </div>
           </div>

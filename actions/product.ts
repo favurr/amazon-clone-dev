@@ -213,6 +213,17 @@ export async function deleteProduct(id: string) {
   }
 }
 
+export async function deleteProducts(ids: string[]) {
+  try {
+    await prisma.product.deleteMany({ where: { id: { in: ids } } });
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("DELETE_PRODUCT_ERROR", error);
+    return { success: false, error: "Failed to delete product." };
+  }
+}
+
 export async function toggleProductArchive(id: string, isArchived: boolean) {
   try {
     await prisma.product.update({
