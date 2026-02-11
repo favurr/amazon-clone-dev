@@ -24,6 +24,7 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
+  Trash,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -321,7 +322,7 @@ export default function ProductsPage() {
 
             <div className="flex items-center gap-2">
               {selectedProducts.length > 0 && (
-                <Badge variant="secondary" className="h-10 px-4">
+                <Badge variant="secondary">
                   {selectedProducts.length} selected
                 </Badge>
               )}
@@ -337,8 +338,10 @@ export default function ProductsPage() {
               </Button>
 
               <Button variant="outline" size="sm" className="h-10 gap-2">
-                <Download className="h-4 w-4" />
-                Export
+                <Trash className="h-4 w-4" />
+                {selectedProducts.length > 0
+                  ? `Delete ${selectedProducts.length}`
+                  : "Delete"}
               </Button>
             </div>
           </div>
