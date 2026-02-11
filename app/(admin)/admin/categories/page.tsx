@@ -115,27 +115,26 @@ export default function CategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Use startTransition to handle the loading state properly
     startTransition(async () => {
       try {
         const result = editMode
           ? await updateCategory(
-              selectedCategory.id, imageUrl,
+              selectedCategory.id,
               name,
+              imageUrl,
               isActive,
             )
           : await createCategory(name);
 
-        console.log("Server Response:", result); // Debugging line
+        console.log("Server Response:", result);
 
         if (result && result.success) {
           alert.success(
             `Category ${editMode ? "updated" : "created"}`,
             "floating",
           );
-          closeModal(); // This MUST be called here
+          closeModal();
 
-          // Force a refresh of the local state
           await fetchData();
         } else {
           alert.error(result?.error || "Action failed", "floating");
@@ -218,12 +217,12 @@ export default function CategoriesPage() {
                 unoptimized
               />
             </div>
-              <Input
-                placeholder="Paste main image URL..."
-                className="h-9 text-xs"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
+            <Input
+              placeholder="Paste main image URL..."
+              className="h-9 text-xs"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+            />
 
             <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
               <Checkbox

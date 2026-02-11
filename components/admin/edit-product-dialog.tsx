@@ -205,7 +205,7 @@ export function EditProductDialog({
           <form
             id="edit-product-form"
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col h-[calc(90vh-140px)]"
+            className="flex flex-col h-[calc(96vh-140px)]"
           >
             <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
               <div className="grid grid-cols-12 gap-8">

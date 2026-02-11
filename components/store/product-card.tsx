@@ -12,7 +12,7 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import { Currency, CurrencyValue } from "../currency";
 
@@ -51,17 +51,19 @@ export function ProductCard({
   if (compact) {
     return (
       <Link href={`/products/${product.slug}`} className="group block">
-        <Card className="relative mx-auto w-full max-w-sm pt-0 transition-shadow">
-          <img
-            src={product.mainImageUrl}
-            alt={product.title}
-            className="relative z-20 aspect-video w-full object-contain"
-          />
+        <Card className="relative mx-auto w-full gap-2 max-w-sm pt-0 ">
+          <div className="inset-0">
+            <img
+              src={product.mainImageUrl}
+              alt={product.title}
+              className="relative z-20 aspect-video w-full object-cover rounded-t-lg"
+            />
+          </div>
 
           {discount > 0 && (
             <Badge
               variant="secondary"
-              className="absolute top-1 left-1 bg-[#c7511f] text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded"
+              className="absolute top-1 z-25 left-1 bg-[#c7511f] text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded"
             >
               -{discount}%
             </Badge>
@@ -77,12 +79,12 @@ export function ProductCard({
 
           <CardHeader className="p-2 sm:p-3 md:p-4">
             <CardAction></CardAction>
-            <CardTitle className="text-xs sm:text-sm text-[#0F1111] line-clamp-2 mb-1 sm:mb-2 min-h-8 sm:min-h-10">
+            <CardTitle className="text-xs sm:text-sm text-[#0F1111] line-clamp-2 mb-1">
               {product.title}
             </CardTitle>
             <CardDescription>
               {product._count && product._count.reviews > 0 && (
-                <div className="flex z-50 items-center gap-0.5 sm:gap-1 mb-1 sm:mb-2">
+                <div className="flex z-50 items-center gap-0.5 sm:gap-1 mb-1">
                   <div className="flex">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
@@ -103,16 +105,18 @@ export function ProductCard({
               )}
             </CardDescription>
           </CardHeader>
-          <CardFooter className="flex px-2 sm:px-3 pb-2 sm:pb-3 flex-col">
-          
+          <CardFooter className="flex px-2 sm:px-3 flex-col">
             <div className="flex relative justify-between items-baseline w-full">
               {product.discountedPrice && (
-            <span className="text-[10px] absolute -top-3 sm:-top-4 left-0.5 text-[#565959]">
-              <Currency>
-                <CurrencyValue value={product.titlePrice} className="line-through" />
-              </Currency>
-            </span>
-          )}
+                <span className="text-[10px] absolute -top-3 sm:-top-4 left-0.5 text-[#565959]">
+                  <Currency>
+                    <CurrencyValue
+                      value={product.titlePrice}
+                      className="line-through"
+                    />
+                  </Currency>
+                </span>
+              )}
               <span className="text-lg font-normal text-[#B12704]">
                 <Currency>
                   <CurrencyValue value={finalPrice} />
