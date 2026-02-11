@@ -75,6 +75,7 @@ export default function CategoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   const fetchData = async () => {
@@ -92,6 +93,7 @@ export default function CategoriesPage() {
     setIsFormOpen(false);
     setEditMode(false);
     setName("");
+    setImageUrl("");
     setIsActive(true);
     setSelectedCategory(null);
   };
@@ -99,6 +101,7 @@ export default function CategoriesPage() {
   const onEditClick = (cat: any) => {
     setSelectedCategory(cat);
     setName(cat.name);
+    setImageUrl(cat.imageUrl);
     setIsActive(cat.isActive);
     setEditMode(true);
     setIsFormOpen(true);
@@ -117,8 +120,7 @@ export default function CategoriesPage() {
       try {
         const result = editMode
           ? await updateCategory(
-              selectedCategory.id,
-              selectedCategory.imageUrl,
+              selectedCategory.id, imageUrl,
               name,
               isActive,
             )
@@ -207,20 +209,21 @@ export default function CategoriesPage() {
               />
             </div>
 
-            <div className="relative aspect-square w-full rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+            <div className="relative h-52 w-full rounded-lg flex items-center justify-center overflow-hidden">
               <Image
-                src={selectedCategory?.imageUrl}
+                src={imageUrl}
                 fill
-                className="object-contain p-2"
+                className="object-contain p-2 bg-slate-50"
                 alt="Preview"
                 unoptimized
               />
+            </div>
               <Input
                 placeholder="Paste main image URL..."
                 className="h-9 text-xs"
-                value={selectedCategory.imageUrl ?? ""}
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
               />
-            </div>
 
             <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
               <Checkbox
