@@ -70,6 +70,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Currency, CurrencyValue } from "@/components/currency";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -82,7 +83,9 @@ export default function ProductsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"all" | "featured" | "archived">("all");
+  const [viewMode, setViewMode] = useState<"all" | "featured" | "archived">(
+    "all",
+  );
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -173,7 +176,7 @@ export default function ProductsPage() {
 
   const toggleSelectProduct = (id: string) => {
     setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
     );
   };
 
@@ -301,7 +304,10 @@ export default function ProductsPage() {
               </div>
 
               {/* View Mode Filter */}
-              <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
+              <Select
+                value={viewMode}
+                onValueChange={(value: any) => setViewMode(value)}
+              >
                 <SelectTrigger className="w-[140px] h-10 bg-slate-50 border-slate-200">
                   <SelectValue />
                 </SelectTrigger>
@@ -319,7 +325,7 @@ export default function ProductsPage() {
                   {selectedProducts.length} selected
                 </Badge>
               )}
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -377,28 +383,26 @@ export default function ProductsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-64 text-center"
-                >
+                <TableCell colSpan={7} className="h-64 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
-                    <p className="text-sm text-slate-500">Loading products...</p>
+                    <p className="text-sm text-slate-500">
+                      Loading products...
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-64 text-center"
-                >
+                <TableCell colSpan={7} className="h-64 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <div className="bg-slate-100 p-4 rounded-full">
                       <Package className="h-10 w-10 text-slate-400" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">No products found</p>
+                      <p className="font-semibold text-slate-900">
+                        No products found
+                      </p>
                       <p className="text-sm text-slate-500 mt-1">
                         {searchQuery
                           ? "Try adjusting your search terms"
@@ -422,7 +426,7 @@ export default function ProductsPage() {
                   key={product.id}
                   className={cn(
                     "group hover:bg-slate-50/50 border-b transition-all",
-                    selectedProducts.includes(product.id) && "bg-orange-50/30"
+                    selectedProducts.includes(product.id) && "bg-orange-50/30",
                   )}
                 >
                   <TableCell className="pl-6">
@@ -478,18 +482,30 @@ export default function ProductsPage() {
                   <TableCell className="text-right">
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-3.5 w-3.5 text-slate-400" />
                         <span className="font-bold text-slate-900 text-base">
-                          {product.titlePrice.toFixed(2)}
+                          <Currency>
+                            <CurrencyValue
+                              value={product.titlePrice.toFixed(2)}
+                            />
+                          </Currency>
                         </span>
                       </div>
                       {product.discountedPrice && (
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-slate-400 line-through">
-                            ${product.discountedPrice.toFixed(2)}
+                            <Currency>
+                              <CurrencyValue
+                                value={product.discountedPrice.toFixed(2)}
+                              />
+                            </Currency>
                           </span>
                           <Badge className="bg-red-500 text-white text-[9px] px-1.5 py-0">
-                            -{getDiscountPercentage(product.titlePrice, product.discountedPrice)}%
+                            -
+                            {getDiscountPercentage(
+                              product.titlePrice,
+                              product.discountedPrice,
+                            )}
+                            %
                           </Badge>
                         </div>
                       )}
@@ -504,8 +520,8 @@ export default function ProductsPage() {
                         (product.totalStock || 0) < 10
                           ? "bg-red-50 text-red-700 border-red-200"
                           : (product.totalStock || 0) < 50
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : "bg-green-50 text-green-700 border-green-200"
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-green-50 text-green-700 border-green-200",
                       )}
                     >
                       {product.totalStock || 0} units
@@ -521,7 +537,10 @@ export default function ProductsPage() {
                         </Badge>
                       )}
                       {product.isArchived ? (
-                        <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-300">
+                        <Badge
+                          variant="outline"
+                          className="bg-slate-100 text-slate-600 border-slate-300"
+                        >
                           <Archive className="h-3 w-3 mr-1" />
                           Archived
                         </Badge>
@@ -585,13 +604,16 @@ export default function ProductsPage() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                  Delete Product?
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
                                   This will permanently remove{" "}
                                   <span className="font-bold text-slate-900">
                                     "{product.title}"
                                   </span>{" "}
-                                  from your inventory. This action cannot be undone.
+                                  from your inventory. This action cannot be
+                                  undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -635,7 +657,7 @@ export default function ProductsPage() {
                 </span>{" "}
                 products
               </p>
-              
+
               <Select
                 value={pageSize.toString()}
                 onValueChange={(value) => setPageSize(Number(value))}
@@ -686,7 +708,7 @@ export default function ProductsPage() {
                         "h-9 w-9",
                         currentPage === pageNum
                           ? "bg-orange-500 hover:bg-orange-600 text-white shadow-md"
-                          : "bg-white hover:bg-slate-50 border-slate-300"
+                          : "bg-white hover:bg-slate-50 border-slate-300",
                       )}
                     >
                       {pageNum}
