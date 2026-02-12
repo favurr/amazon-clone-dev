@@ -66,16 +66,18 @@ function ProductsContent() {
       setLoading(true);
       const search = searchParams.get("q") || "";
 
-      const result = await getProducts({
-        search,
-        categoryId: selectedCategories[0],
-        tags: selectedTags,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
-        sortBy: sortBy as any,
-        page: currentPage,
-        pageSize: 24,
-      });
+      // In the loadProducts useEffect in products-page-client.tsx
+const result = await getProducts({
+  search,
+  categoryId: selectedCategories[0],
+  tags: selectedTags,
+  // Only pass price filters if they differ from the full range
+  minPrice: priceRange[0] !== filterOptions.minPrice ? priceRange[0] : undefined,
+  maxPrice: priceRange[1] !== filterOptions.maxPrice ? priceRange[1] : undefined,
+  sortBy: sortBy as any,
+  page: currentPage,
+  pageSize: 24,
+});
 
       setProducts(result.products);
       setTotalPages(result.totalPages);
