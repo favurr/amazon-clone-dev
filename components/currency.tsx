@@ -72,7 +72,7 @@ const CurrencyValue = ({ value, className }: CurrencyValueProps) => {
   if (value == null) return null;
 
   return (
-    <span className={cn("leading-tight", className)}>
+    <span className={cn("leading-tight", className)}>{" "}
       {formatCurrency(value, currency, locale)}
     </span>
   );

@@ -2,6 +2,17 @@
 
 import { useEffect, useState, useTransition, useCallback } from "react";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Plus,
   Edit2,
   Trash2,
@@ -25,11 +36,16 @@ import {
   AlertCircle,
   CheckCircle2,
   Trash,
+  Loader,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { deleteProduct, getAdminProducts, deleteProducts } from "@/actions/product";
+import {
+  deleteProduct,
+  getAdminProducts,
+  deleteProducts,
+} from "@/actions/product";
 import {
   Table,
   TableBody,
@@ -41,17 +57,6 @@ import {
 import { ProductFormDialog } from "@/components/admin/product-form-dialog";
 import { EditProductDialog } from "@/components/admin/edit-product-dialog";
 import { format } from "date-fns";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,6 +82,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Pagination & Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -174,13 +180,15 @@ export default function ProductsPage() {
       }
     });
   };
-  
+
   const handleDeleteSelected = async () => {
     startTransition(async () => {
+      setIsDeleting(true);
       const res = await deleteProducts(selectedProducts);
       if (res.success) {
         toast.success("Selected products deleted");
         loadProducts();
+        setIsDeleting(false);
         setSelectedProducts([]);
       } else {
         toast.error(res.error || "Failed to delete selected products");
@@ -350,12 +358,31 @@ export default function ProductsPage() {
                 Refresh
               </Button>
 
-              <Button variant="outline" size="sm" className="h-10 gap-2" onClick={() => handleDeleteSelected()}>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={selectedProducts.length === 0 || isDeleting} className="h-10 gap-2">
                 <Trash className="h-4 w-4" />
                 {selectedProducts.length > 0
                   ? `Delete ${selectedProducts.length}`
-                  : `${selectedProducts.length} Selected`}
-              </Button>
+                  : `${selectedProducts.length} Selected`}</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you sure you want to delete the selected products?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. {selectedProducts.length}{" "}products will be deleted permanently.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction className="bg-red-500 hover:bg-red-600 text-white" onClick={handleDeleteSelected}>
+                      {selectedProducts.length === 1 ? "Delete Product" : `Delete ${selectedProducts.length} Products`}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>
