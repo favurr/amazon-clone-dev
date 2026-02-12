@@ -58,7 +58,7 @@ export function AppSidebar() {
           </div>
           <div className="hidden group-data-[collapsible=icon]:flex items-center justify-center">
             <Image
-              src="/amazon-logo-icon.jpeg"
+              src="/amazon_logo_small.png"
               alt="Amazon Admin"
               width={100}
               height={30}
