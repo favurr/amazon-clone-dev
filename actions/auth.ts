@@ -93,8 +93,8 @@ export async function resetPasswordWithOtpAction(params: {
       body: { email, type: "forget-password", otp },
     });
 
-    await auth.api.changePassword({
-      body: {  },
+    await auth.api.resetPasswordEmailOTP({
+      body: { email, otp, password: newPassword },
     });
 
     return { success: true };
