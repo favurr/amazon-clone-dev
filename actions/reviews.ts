@@ -326,7 +326,7 @@ export async function getUserReviews(userId: string) {
             id: true,
             title: true,
             slug: true,
-            imageUrl: true,
+            mainImageUrl: true,
           },
         },
       },
@@ -342,7 +342,7 @@ export async function getUserReviews(userId: string) {
         id: review.product.id,
         title: review.product.title,
         slug: review.product.slug,
-        imageUrl: review.product.imageUrl,
+        imageUrl: review.product.mainImageUrl,
       },
     }));
   } catch (error) {
