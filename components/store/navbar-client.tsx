@@ -25,6 +25,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatPrice } from "@/lib/formatters";
 import { useCartStore } from "@/store/use-cart-store";
+import { logoutAction } from "@/actions/auth";
 
 type Category = {
   id: string;
@@ -388,13 +389,15 @@ export default function NavbarClient({
                 >
                   Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/api/auth/sign-out"
-                    className="cursor-pointer text-red-600"
-                  >
-                    Sign Out
-                  </Link>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await logoutAction();
+                    router.push("/");
+                    router.refresh();
+                  }}
+                  className="cursor-pointer text-red-600"
+                >
+                  Sign Out
                 </DropdownMenuItem>
               </>
             ) : (
@@ -547,12 +550,17 @@ export default function NavbarClient({
                         >
                           Your Orders
                         </Link>
-                        <Link
-                          href="/api/auth/sign-out"
-                          className="block py-2 px-3 hover:bg-gray-100 rounded text-red-600"
+                        <button
+                          onClick={async () => {
+                            await logoutAction();
+                            setIsMobileMenuOpen(false);
+                            router.push("/");
+                            router.refresh();
+                          }}
+                          className="block w-full text-left py-2 px-3 hover:bg-gray-100 rounded text-red-600"
                         >
                           Sign Out
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   ) : (
