@@ -179,9 +179,10 @@ const Checkout = ({
   const { items, total } = cartItemData;
 
   const defaultProducts = cartItemData.items.map((item) => ({
-    product_id: item.id,
+    product_id: item.productId,
     quantity: item.quantity,
     price: item.price,
+    variantId: item.variantId || null,
   }));
 
   const form = useForm({

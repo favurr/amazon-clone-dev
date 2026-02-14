@@ -75,7 +75,7 @@ export function CartDrawer({ open, onClose, items, total }: CartDrawerProps) {
                   >
                     {/* Image */}
                     <Link
-                      href={`/product/${item.slug}`}
+                      href={`/products/${item.slug}`}
                       onClick={onClose}
                       className="relative h-20 w-20 rounded-lg bg-slate-100 overflow-hidden shrink-0"
                     >
@@ -90,7 +90,7 @@ export function CartDrawer({ open, onClose, items, total }: CartDrawerProps) {
                     {/* Details */}
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/product/${item.slug}`}
+                        href={`/products/${item.slug}`}
                         onClick={onClose}
                         className="font-medium text-sm text-slate-900 hover:text-orange-600 line-clamp-2 mb-1"
                       >

@@ -90,7 +90,7 @@ export function CheckoutCartPageClient({
           <CardHeader className="flex w-full items-center justify-between">
             <div className="gap-4 flex items-center">
               <Link
-                href={`/product/${item.slug}`}
+                href={`/products/${item.slug}`}
                 className="relative h-12 w-12 rounded-lg bg-slate-100 overflow-hidden shrink-0"
               >
                 <Image
@@ -103,7 +103,7 @@ export function CheckoutCartPageClient({
               <div className="ml-4">
                 <CardTitle className="font-semibold text-lg text-slate-900">
                   <Link
-                    href={`/product/${item.slug}`}
+                    href={`/products/${item.slug}`}
                     className="font-semibold text-lg text-slate-900 hover:text-orange-600 line-clamp-2"
                   >
                     {item.title}

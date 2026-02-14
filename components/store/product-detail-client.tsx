@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { ReviewForm } from "@/components/store/review-form";
 import { ReviewList } from "@/components/store/review-list";
 import Link from "next/link";
+import { Currency, CurrencyValue } from "../currency";
 
 interface ProductDetailClientProps {
   product: any;
@@ -228,11 +229,11 @@ export function ProductDetailClient({
               <div className="space-y-2">
                 <div className="flex items-baseline gap-3">
                   <span className="text-4xl font-bold text-slate-900">
-                    ${finalPrice.toFixed(2)}
+                    <Currency><CurrencyValue value={finalPrice}/></Currency>
                   </span>
                   {product.discountedPrice && (
                     <span className="text-xl text-slate-400 line-through">
-                      ${product.titlePrice.toFixed(2)}
+                      <Currency><CurrencyValue value={product.titlePrice} className="line-through"/></Currency>
                     </span>
                   )}
                   {discount > 0 && (
@@ -360,7 +361,7 @@ export function ProductDetailClient({
                       <p className="font-semibold text-slate-900">
                         Free Shipping
                       </p>
-                      <p className="text-slate-600">On orders over $50</p>
+                      <p className="text-slate-600">On orders over <Currency><CurrencyValue value={50}/></Currency></p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-sm">

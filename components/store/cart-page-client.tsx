@@ -8,6 +8,7 @@ import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { Currency, CurrencyValue } from "../currency";
 
 interface CartPageClientProps {
   cartData: {
@@ -77,7 +78,7 @@ export function CartPageClient({ cartData, userId }: CartPageClientProps) {
           <div className="flex gap-6">
             {/* Image */}
             <Link
-              href={`/product/${item.slug}`}
+              href={`/products/${item.slug}`}
               className="relative h-32 w-32 rounded-lg bg-slate-100 overflow-hidden shrink-0"
             >
               <Image
@@ -92,7 +93,7 @@ export function CartPageClient({ cartData, userId }: CartPageClientProps) {
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start mb-2">
                 <Link
-                  href={`/product/${item.slug}`}
+                  href={`/products/${item.slug}`}
                   className="font-semibold text-lg text-slate-900 hover:text-orange-600 line-clamp-2"
                 >
                   {item.title}
@@ -152,10 +153,10 @@ export function CartPageClient({ cartData, userId }: CartPageClientProps) {
 
                 <div className="text-right">
                   <p className="text-2xl font-bold text-slate-900">
-                    ${item.subtotal.toFixed(2)}
+                    <Currency><CurrencyValue value={item.subtotal}/></Currency>
                   </p>
                   <p className="text-sm text-slate-500">
-                    ${item.price.toFixed(2)} each
+                    <Currency><CurrencyValue value={item.price}/></Currency> each
                   </p>
                 </div>
               </div>
@@ -197,11 +198,15 @@ export default function CartPageWrapper({ cartData }: CartPageClientProps) {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-slate-700">
                   <span>Subtotal</span>
-                  <span className="font-semibold">${total.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    <Currency><CurrencyValue value={total}/></Currency>
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-700">
                   <span>Estimated Tax</span>
-                  <span className="font-semibold">${taxAmount.toFixed(2)}</span>
+                  <span className="font-semibold">
+                    <Currency><CurrencyValue value={taxAmount}/></Currency>
+                    </span>
                 </div>
                 <div className="flex justify-between text-slate-700">
                   <span>Shipping</span>
@@ -213,7 +218,7 @@ export default function CartPageWrapper({ cartData }: CartPageClientProps) {
 
               <div className="flex justify-between text-xl font-bold text-slate-900 mb-6">
                 <span>Total</span>
-                <span>${grandTotal.toFixed(2)}</span>
+                <span><Currency><CurrencyValue value={grandTotal}/></Currency></span>
               </div>
 
               <Button
