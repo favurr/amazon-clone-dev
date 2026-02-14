@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatPrice } from "@/lib/formatters";
-import { useCartCount } from "@/hooks/use-cart-count";
+import { useCartStore } from "@/store/use-cart-store";
 
 type Category = {
   id: string;
@@ -68,10 +68,12 @@ export default function NavbarClient({
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Use dynamic cart count that updates on navigation
-  const cartCount = useCartCount(initialCartCount);
+  const cartCount = useCartStore((s) => s.count);
+  const setCartCount = useCartStore((s) => s.setCount);
+  useEffect(() => {
+    setCartCount(initialCartCount);
+  }, [initialCartCount, setCartCount]);
 
-  // Clear search query when navigating away from search page
   useEffect(() => {
     if (!pathname.includes("/search")) {
       setSearchQuery("");
@@ -186,7 +188,7 @@ export default function NavbarClient({
 
   return (
     <>
-      <nav className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 bg-[#131921] h-[60px] text-white">
+      <nav className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 bg-[#131921] h-15 text-white">
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -198,14 +200,14 @@ export default function NavbarClient({
         {/* Amazon Logo */}
         <Link
           href="/"
-          className="px-1 sm:px-2 border border-transparent pt-1 rounded-sm flex-shrink-0"
+          className="px-1 sm:px-2 border border-transparent pt-1 rounded-sm shrink-0"
         >
           <Image
             src="/amazon-logo-white.png"
             alt="Amazon Logo"
             height={30}
             width={100}
-            className="object-contain w-20 sm:w-24 md:w-[100px]"
+            className="object-contain w-20 sm:w-24 md:w-25"
           />
         </Link>
 
@@ -213,24 +215,24 @@ export default function NavbarClient({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div
-              className={`${navBoxClass} flex-row items-end gap-1 min-w-[100px] lg:min-w-[120px] hidden sm:flex`}
+              className={`${navBoxClass} flex-row items-end gap-1 min-w-25 lg:min-w-30 hidden sm:flex`}
             >
               <div className="flex flex-col">
                 <span className="text-[10px] lg:text-[12px] leading-none text-gray-300 font-light">
                   Select
                 </span>
-                <span className="text-[12px] lg:text-[14px] leading-none font-bold truncate max-w-[80px] lg:max-w-[100px]">
+                <span className="text-[12px] lg:text-[14px] leading-none font-bold truncate max-w-20 lg:max-w-25">
                   {selectedCategoryName}
                 </span>
               </div>
               <ChevronDown
                 size={14}
-                className="text-gray-400 mb-0.5 flex-shrink-0"
+                className="text-gray-400 mb-0.5 shrink-0"
               />
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[200px] p-0">
-            <ScrollArea className="h-[300px]">
+          <DropdownMenuContent className="w-50 p-0">
+            <ScrollArea className="h-75">
               <DropdownMenuItem
                 onClick={() => handleCategorySelect("all")}
                 className={`cursor-pointer ${selectedCategory === "all" ? "bg-accent" : ""}`}
@@ -301,13 +303,13 @@ export default function NavbarClient({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           {suggestion.type === "category" && (
-                            <FolderOpen className="w-4 h-4 text-[#c45500] flex-shrink-0" />
+                            <FolderOpen className="w-4 h-4 text-[#c45500] shrink-0" />
                           )}
                           {suggestion.type === "tag" && (
-                            <Tag className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                            <Tag className="w-4 h-4 text-blue-600 shrink-0" />
                           )}
                           {suggestion.type === "product" && (
-                            <Package className="w-4 h-4 text-green-600 flex-shrink-0" />
+                            <Package className="w-4 h-4 text-green-600 shrink-0" />
                           )}
 
                           <span className="text-sm text-gray-900 truncate">
@@ -336,7 +338,9 @@ export default function NavbarClient({
         {/* Account & Lists - Hidden on mobile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className={`${navBoxClass} flex-row items-end gap-1 hidden md:flex`}>
+            <div
+              className={`${navBoxClass} flex-row items-end gap-1 hidden md:flex`}
+            >
               <div className="flex flex-col">
                 <span className="text-[10px] lg:text-[12px] leading-none text-gray-300 font-light">
                   Hello, {user ? user.firstName : "sign in"}
@@ -441,7 +445,9 @@ export default function NavbarClient({
           <span className="text-[10px] lg:text-[12px] leading-none text-gray-300 font-light">
             Returns
           </span>
-          <span className="text-[12px] lg:text-[14px] leading-none font-bold">& Orders</span>
+          <span className="text-[12px] lg:text-[14px] leading-none font-bold">
+            & Orders
+          </span>
         </Link>
 
         {/* Cart - Responsive */}
@@ -451,7 +457,13 @@ export default function NavbarClient({
         >
           <div className="relative flex items-center">
             {/* Cart Icon */}
-            <Image src="/cart.png" alt="Cart" width={36} height={36} className="w-8 h-8 sm:w-10 sm:h-10" />
+            <Image
+              src="/cart.png"
+              alt="Cart"
+              width={36}
+              height={36}
+              className="w-8 h-8 sm:w-10 sm:h-10"
+            />
 
             {/* Item Count - Perfectly positioned in the basket notch */}
             <span className="absolute top-[-2px] left-[11px] sm:left-[13px] w-4 sm:w-5 text-center text-[#f08804] text-[14px] sm:text-[16px] font-bold leading-none bg-transparent">
@@ -460,7 +472,9 @@ export default function NavbarClient({
           </div>
 
           {/* Cart Text */}
-          <span className="text-[12px] sm:text-[14px] font-bold pb-1 ml-0.5 sm:ml-1 hidden sm:inline">Cart</span>
+          <span className="text-[12px] sm:text-[14px] font-bold pb-1 ml-0.5 sm:ml-1 hidden sm:inline">
+            Cart
+          </span>
         </Link>
       </nav>
 
@@ -472,7 +486,7 @@ export default function NavbarClient({
             className="absolute inset-0 bg-black/50"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          
+
           {/* Sidebar */}
           <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-white">
             <ScrollArea className="h-full">
@@ -480,10 +494,17 @@ export default function NavbarClient({
               <div className="bg-[#232f3e] text-white p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {user ? (
-                    <span className="text-lg font-semibold">Hello, {user.firstName}</span>
+                    <span className="text-lg font-semibold">
+                      Hello, {user.firstName}
+                    </span>
                   ) : (
-                    <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
-                      <span className="text-lg font-semibold">Hello, Sign in</span>
+                    <Link
+                      href="/auth/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <span className="text-lg font-semibold">
+                        Hello, Sign in
+                      </span>
                     </Link>
                   )}
                 </div>

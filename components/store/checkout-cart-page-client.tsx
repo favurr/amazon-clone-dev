@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { removeCartItem, updateCartItem } from "@/actions/store";
+import { Currency, CurrencyValue } from "@/components/currency";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
-import { updateCartItem, removeCartItem } from "@/actions/store";
-import { toast } from "sonner";
 import {
   Card,
   CardAction,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card";
-import { Currency, CurrencyValue } from "@/components/currency";
+import { useCartStore } from "@/store/use-cart-store";
+import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface CartPageClientProps {
   cartData: {
@@ -31,6 +31,7 @@ export function CheckoutCartPageClient({
   userId,
 }: CartPageClientProps) {
   const [updating, setUpdating] = useState<string | null>(null);
+  const { decrement } = useCartStore();
 
   const { items } = cartData;
 
@@ -47,6 +48,7 @@ export function CheckoutCartPageClient({
     setUpdating(itemId);
     const result = await removeCartItem(itemId);
     if (result.success) {
+      decrement(); // ← update navbar badge immediately
       toast.success("Item removed");
     } else {
       toast.error(result.error || "Failed to remove item");

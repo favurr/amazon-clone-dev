@@ -28,6 +28,8 @@ function ProductsContent() {
   const [filterOptions, setFilterOptions] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  // Track whether priceRange has been initialized from real filter data
+  const [priceRangeReady, setPriceRangeReady] = useState(false);
 
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,12 +41,21 @@ function ProductsContent() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortBy, setSortBy] = useState<string>("newest");
 
-  // Load filter options
+  // Load filter options — runs once on mount
   useEffect(() => {
     const loadFilters = async () => {
-      const options = await getFilterOptions();
-      setFilterOptions(options);
-      setPriceRange([options.minPrice, options.maxPrice]);
+      try {
+        const options = await getFilterOptions();
+        setFilterOptions(options);
+        setPriceRange([options.minPrice, options.maxPrice]);
+      } catch (err) {
+        console.error("Failed to load filter options:", err);
+        // Still mark as ready so products load even if filters fail
+        setFilterOptions({ categories: [], tags: [], minPrice: 0, maxPrice: 10000 });
+      } finally {
+        // Signal that price range is now initialised
+        setPriceRangeReady(true);
+      }
     };
     loadFilters();
   }, []);
@@ -52,42 +63,45 @@ function ProductsContent() {
   // Parse URL params on mount
   useEffect(() => {
     const category = searchParams.get("category");
-    const search = searchParams.get("q");
     const sort = searchParams.get("sort");
-    const featured = searchParams.get("featured");
 
     if (category) setSelectedCategories([category]);
     if (sort) setSortBy(sort);
   }, [searchParams]);
 
-  // Load products
+  // Load products — only runs once priceRange is initialised from real filter data
   useEffect(() => {
+    if (!priceRangeReady) return;
+
     const loadProducts = async () => {
       setLoading(true);
-      const search = searchParams.get("q") || "";
+      try {
+        const search = searchParams.get("q") || "";
 
-      // In the loadProducts useEffect in products-page-client.tsx
-const result = await getProducts({
-  search,
-  categoryId: selectedCategories[0],
-  tags: selectedTags,
-  // Only pass price filters if they differ from the full range
-  minPrice: priceRange[0] !== filterOptions.minPrice ? priceRange[0] : undefined,
-  maxPrice: priceRange[1] !== filterOptions.maxPrice ? priceRange[1] : undefined,
-  sortBy: sortBy as any,
-  page: currentPage,
-  pageSize: 24,
-});
+        const result = await getProducts({
+          search,
+          categoryId: selectedCategories[0],
+          tags: selectedTags,
+          // Only apply price filter when user has narrowed the range
+          minPrice: filterOptions && priceRange[0] !== filterOptions.minPrice ? priceRange[0] : undefined,
+          maxPrice: filterOptions && priceRange[1] !== filterOptions.maxPrice ? priceRange[1] : undefined,
+          sortBy: sortBy as any,
+          page: currentPage,
+          pageSize: 24,
+        });
 
-      setProducts(result.products);
-      setTotalPages(result.totalPages);
-      setLoading(false);
+        setProducts(result.products ?? []);
+        setTotalPages(result.totalPages ?? 1);
+      } catch (err) {
+        console.error("Failed to load products:", err);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (filterOptions) {
-      const timer = setTimeout(loadProducts, 300);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(loadProducts, 300);
+    return () => clearTimeout(timer);
   }, [
     searchParams,
     selectedCategories,
@@ -95,6 +109,7 @@ const result = await getProducts({
     priceRange,
     sortBy,
     currentPage,
+    priceRangeReady,
     filterOptions,
   ]);
 

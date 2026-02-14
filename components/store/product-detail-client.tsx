@@ -1,41 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { addToCart } from "@/actions/store";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { useAlert } from "@/store/use-alert-store";
+import { useCartStore } from "@/store/use-cart-store";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Star,
-  ShoppingCart,
   Heart,
-  Share2,
-  Check,
   Package,
+  Share2,
   Shield,
+  ShoppingCart,
+  Star,
   Truck,
 } from "lucide-react";
-import { addToCart } from "@/actions/store";
-import { useAlert } from "@/store/use-alert-store";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useState } from "react";
 import { toast } from "sonner";
+import { ReviewForm } from "@/components/store/review-form";
+import { ReviewList } from "@/components/store/review-list";
+import Link from "next/link";
 
 interface ProductDetailClientProps {
   product: any;
   userId?: string;
+  reviews: any[];
+  reviewEligibility: {
+    status: "can_review" | "already_reviewed" | "not_purchased" | "error";
+    review: {
+      id: string;
+      rating: number;
+      comment: string | null;
+      createdAt: Date;
+    } | null;
+  } | null;
 }
 
 export function ProductDetailClient({
   product,
   userId,
+  reviews,
+  reviewEligibility,
 }: ProductDetailClientProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<
@@ -44,6 +51,7 @@ export function ProductDetailClient({
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const alert = useAlert();
+  const { increment, setCount } = useCartStore();
 
   const images =
     product.images.length > 0
@@ -114,19 +122,13 @@ export function ProductDetailClient({
 
     if (result.success) {
       if (result.isNewItem) {
-        toast.success("Added to cart!", {
-          description: `${quantity} ${quantity === 1 ? "item" : "items"} added`,
-        });
+        increment();
+        toast.success("Added to cart!");
       } else {
-        toast.success("Cart updated!", {
-          description: `Quantity increased by ${quantity}`,
-        });
+        toast.success("Cart updated!");
       }
-      setQuantity(1);
     } else {
-      toast.error("Failed to add to cart", {
-        description: result.error || "Please try again",
-      });
+      alert.error(result.error || "Failed to add to cart", "floating");
     }
 
     setIsAdding(false);
@@ -139,56 +141,34 @@ export function ProductDetailClient({
       : 0;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-slate-600 mb-6">
-          <Link href="/" className="hover:text-orange-600">
-            Home
-          </Link>
-          <span>/</span>
-          <Link href="/products" className="hover:text-orange-600">
-            Products
-          </Link>
-          <span>/</span>
-          <Link
-            href={`/products?category=${product.category.id}`}
-            className="hover:text-orange-600"
-          >
-            {product.category.name}
-          </Link>
-          <span>/</span>
-          <span className="text-slate-900 font-medium">{product.title}</span>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column - Images */}
-          <div className="space-y-4">
-            {/* Main Image */}
-            <div className="relative aspect-square bg-slate-100 rounded-lg overflow-hidden">
+          <div>
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-white border border-slate-200 mb-4">
               <Image
-                src={images[selectedImage].url}
-                alt={images[selectedImage].altText || product.title}
+                src={images[selectedImage]?.url || product.mainImageUrl}
+                alt={images[selectedImage]?.altText || product.title}
                 fill
                 className="object-cover"
                 priority
               />
               {discount > 0 && (
-                <Badge className="absolute top-4 left-4 bg-red-500 text-white border-none text-lg px-3 py-1">
+                <div className="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
                   -{discount}%
-                </Badge>
+                </div>
               )}
             </div>
 
-            {/* Thumbnail Gallery */}
             {images.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
+              <div className="flex gap-3 overflow-x-auto pb-2">
                 {images.map((image: any, index: number) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={cn(
-                      "relative aspect-square rounded-lg overflow-hidden border-2 transition-all",
+                      "relative h-20 w-20 rounded-lg overflow-hidden border-2 shrink-0 transition-colors",
                       selectedImage === index
                         ? "border-orange-500"
                         : "border-slate-200 hover:border-slate-300",
@@ -255,31 +235,22 @@ export function ProductDetailClient({
                       ${product.titlePrice.toFixed(2)}
                     </span>
                   )}
+                  {discount > 0 && (
+                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+                      Save {discount}%
+                    </Badge>
+                  )}
                 </div>
-                {product.discountedPrice && (
-                  <p className="text-emerald-600 font-semibold">
-                    Save $
-                    {(product.titlePrice - product.discountedPrice).toFixed(2)}{" "}
-                    ({discount}% off)
-                  </p>
-                )}
               </div>
 
-              <Separator />
-
-              {/* Variant Selection */}
+              {/* Variants */}
               {hasVariants && (
                 <div className="space-y-4">
                   {Object.entries(variantTypes).map(
                     ([type, variants]: [string, any]) => (
                       <div key={type} className="space-y-2">
                         <Label className="font-semibold text-slate-700">
-                          {type}:
-                          {selectedVariants[type] && (
-                            <span className="ml-2 font-normal text-slate-600">
-                              {selectedVariants[type]}
-                            </span>
-                          )}
+                          {type}
                         </Label>
                         <div className="flex flex-wrap gap-2">
                           {variants.map((variant: any) => {
@@ -290,15 +261,16 @@ export function ProductDetailClient({
                             return (
                               <button
                                 key={variant.id}
-                                onClick={() =>
-                                  setSelectedVariants((prev) => ({
-                                    ...prev,
-                                    [type]: variant.value,
-                                  }))
-                                }
-                                disabled={!isAvailable}
+                                onClick={() => {
+                                  if (isAvailable) {
+                                    setSelectedVariants((prev) => ({
+                                      ...prev,
+                                      [type]: variant.value,
+                                    }));
+                                  }
+                                }}
                                 className={cn(
-                                  "px-4 py-2 rounded-lg border-2 font-medium transition-all",
+                                  "px-4 py-2 text-sm border-2 rounded-lg transition-colors font-medium",
                                   isSelected
                                     ? "border-orange-500 bg-orange-50 text-orange-700"
                                     : "border-slate-200 hover:border-slate-300 text-slate-700",
@@ -430,64 +402,80 @@ export function ProductDetailClient({
           </div>
         </div>
 
-        {/* Description & Reviews Section */}
-        <div className="mt-16 space-y-8">
+        {/* Description & Reviews */}
+        <div className="mt-16 space-y-12">
           {/* Description */}
-          <div>
+          <div className="bg-white prose rounded-xl border border-slate-200 p-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">
               Product Description
             </h2>
-            <div className="max-w-none">
-              <article className="prose mx-auto prose-headings:font-sans prose-headings:font-bold prose-headings:text-[var(--color-primary)] prose-a:text-[var(--color-primary)] prose-a:no-underline hover:prose-a:text-[var(--color-primary-foreground)] prose-blockquote:border-l-[4px] prose-blockquote:border-[var(--color-accent)] prose-blockquote:pl-4 prose-code:bg-[var(--color-muted)] prose-code:text-[var(--color-destructive)] prose-pre:bg-[var(--color-card)] prose-pre:text-[var(--color-card-foreground)] prose-img:rounded-md" dangerouslySetInnerHTML={{ __html: product.description }} />
-            </div>
+            <p
+              className="text-slate-600 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
           </div>
 
-          <Separator />
-
-          {/* Reviews */}
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">
-              Customer Reviews
-            </h2>
-            {product.reviews.length === 0 ? (
-              <p className="text-slate-600">
-                No reviews yet. Be the first to review!
-              </p>
-            ) : (
-              <div className="space-y-6">
-                {product.reviews.map((review: any) => (
-                  <div key={review.id} className="border-b pb-6">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-semibold text-slate-900">
-                          {review.user.name ||
-                            `${review.user.firstName} ${review.user.lastName}`}
-                        </p>
-                        <div className="flex items-center gap-1 mt-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={cn(
-                                "h-4 w-4",
-                                i < review.rating
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "text-slate-300",
-                              )}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-sm text-slate-500">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {review.comment && (
-                      <p className="text-slate-700 mt-2">{review.comment}</p>
-                    )}
+          {/* Reviews Section */}
+          <div className="bg-white rounded-xl border border-slate-200 p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-900">
+                Customer Reviews
+              </h2>
+              {reviews.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const avgRating = reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
+                      return (
+                        <Star
+                          key={i}
+                          className={cn(
+                            "h-4 w-4",
+                            i < Math.round(avgRating)
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-slate-300"
+                          )}
+                        />
+                      );
+                    })}
                   </div>
-                ))}
+                  <span className="text-sm text-slate-600">
+                    {(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)} ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Review Form */}
+            {userId ? (
+              <div className="mb-8">
+                <ReviewForm
+                  productId={product.id}
+                  userId={userId}
+                  eligibilityStatus={reviewEligibility?.status || "not_purchased"}
+                  existingReview={reviewEligibility?.review || null}
+                />
+              </div>
+            ) : (
+              <div className="mb-8 bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                <p className="text-slate-600 text-sm">
+                  <Link href="/auth/login" className="text-blue-600 hover:underline font-semibold">
+                    Log in
+                  </Link>{" "}
+                  to leave a review
+                </p>
               </div>
             )}
+
+            <Separator className="my-8" />
+
+            {/* Reviews List */}
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                All Reviews
+              </h3>
+              <ReviewList reviews={reviews} currentUserId={userId} />
+            </div>
           </div>
         </div>
       </div>

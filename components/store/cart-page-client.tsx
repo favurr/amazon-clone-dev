@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { removeCartItem, updateCartItem } from "@/actions/store";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
-import { updateCartItem, removeCartItem } from "@/actions/store";
 import { useAlert } from "@/store/use-alert-store";
+import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 interface CartPageClientProps {
   cartData: {
@@ -232,8 +232,8 @@ export default function CartPageWrapper({ cartData }: CartPageClientProps) {
 
               <div className="mt-6 p-4 bg-slate-50 rounded-lg">
                 <p className="text-xs text-slate-600 text-center">
-                  Secure checkout powered by Paystack. Your payment
-                  information is protected.
+                  Secure checkout powered by Paystack. Your payment information
+                  is protected.
                 </p>
               </div>
             </div>

@@ -15,6 +15,7 @@ interface ProductFilters {
 }
 
 export async function getProducts(filters: ProductFilters = {}) {
+  console.log("🔥 getProducts called with:", filters);
   try {
     const {
       search = "",

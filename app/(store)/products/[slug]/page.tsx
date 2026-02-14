@@ -3,6 +3,7 @@ import { getProductBySlug } from "@/actions/store";
 import { ProductDetailClient } from "@/components/store/product-detail-client";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { canUserReviewProduct, getProductReviews } from "@/actions/reviews";
 
 export default async function ProductDetailPage({
   params,
@@ -20,5 +21,21 @@ export default async function ProductDetailPage({
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
 
-  return <ProductDetailClient product={product} userId={userId} />;
+  // Fetch review data
+  const reviews = await getProductReviews(product.id);
+  
+  // Check if user can review (only if logged in)
+  let reviewEligibility = null;
+  if (userId) {
+    reviewEligibility = await canUserReviewProduct(userId, product.id);
+  }
+
+  return (
+    <ProductDetailClient
+      product={product}
+      userId={userId}
+      reviews={reviews}
+      reviewEligibility={reviewEligibility}
+    />
+  );
 }

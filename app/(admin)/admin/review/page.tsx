@@ -1,9 +1,8 @@
-import React from 'react'
+import { getAllReviews } from "@/actions/reviews";
+import { ReviewsPageClient } from "@/components/admin/reviews-page-client";
 
-const page = () => {
-  return (
-    <div>page</div>
-  )
+export default async function ReviewsPage() {
+  const reviews = await getAllReviews();
+
+  return <ReviewsPageClient reviews={reviews} />;
 }
-
-export default page
