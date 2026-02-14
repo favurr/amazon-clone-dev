@@ -15,7 +15,7 @@ import { useAlert } from "@/store/use-alert-store";
 
 const emailSchema = z.object({ email: z.string().email() });
 const resetSchema = z.object({
-  code: z.string().min(4, "Enter the 4-8 digit code"),
+  otp: z.string().min(4, "Enter the 4-8 digit code"),
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
 
   const resetForm = useForm<z.infer<typeof resetSchema>>({
     resolver: zodResolver(resetSchema),
-    defaultValues: { code: "", newPassword: "" },
+    defaultValues: { otp: "", newPassword: "" },
   });
 
   const onSendCode = async (values: z.infer<typeof emailSchema>) => {
@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
 
   const onReset = async (values: z.infer<typeof resetSchema>) => {
     setIsResetting(true);
-    const res = await resetPasswordWithOtpAction({ email, code: values.code, newPassword: values.newPassword });
+    const res = await resetPasswordWithOtpAction({ email, otp: values.otp, newPassword: values.newPassword });
     setIsResetting(false);
     if (res.success) {
       alert.success("Password reset successfully");
@@ -102,10 +102,10 @@ export default function ForgotPasswordPage() {
                   <div className="text-sm text-gray-600">We sent a code to <span className="font-medium">{email}</span></div>
                   <FormField
                     control={resetForm.control}
-                    name="code"
+                    name="otp"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Verification code</FormLabel>
+                        <FormLabel>Verification code (OTP)</FormLabel>
                         <FormControl>
                           <Input inputMode="numeric" placeholder="Enter the code" {...field} />
                         </FormControl>

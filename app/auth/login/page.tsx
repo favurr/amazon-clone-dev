@@ -122,15 +122,25 @@ export default function LoginPage() {
                   </Button>
                 </form>
               </Form>
-              <p className="text-sm font-light text-gray-500">
-                Don't have an account?{" "}
-                <Link
-                  href="/auth/signup"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Signup here
-                </Link>
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <Link
+                    href="/auth/forgot-password"
+                    className="font-medium text-blue-600 hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </p>
+                <p className="text-sm font-light text-gray-500">
+                  Don't have an account?{" "}
+                  <Link
+                    href="/auth/signup"
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Signup here
+                  </Link>
+                </p>
+              </div>
             </div>
             <div className="text-xs text-gray-600 mt-4 leading-relaxed">
               By continuing, you agree to Amazon's{" "}

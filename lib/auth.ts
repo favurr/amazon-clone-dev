@@ -36,12 +36,10 @@ export const auth = betterAuth({
   plugins: [
     nextCookies(),
     emailOTP({
-      // 10 minutes default
       expiresIn: 10 * 60,
-      // Called whenever we request an OTP to be sent
-      async sendOTP({ email, code /* purpose */ }) {
+      async sendVerificationOTP({ email, otp /* purpose */ }) {
         // purpose could be used to customize subject/content if needed
-        await sendOtpEmail(email, code);
+        await sendOtpEmail(email, otp);
       },
     }),
   ],

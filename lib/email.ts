@@ -1,9 +1,6 @@
-import nodemailer from "nodemailer";
+const nodemailer = require("nodemailer");
 
 export function getMailer() {
-  const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT || 465);
-  const secure = port === 465; // true for 465, false for other ports
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
@@ -12,9 +9,7 @@ export function getMailer() {
   }
 
   const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
+    service: "gmail",
     auth: { user, pass },
   });
 
@@ -23,7 +18,7 @@ export function getMailer() {
 
 export async function sendOtpEmail(to: string, code: string) {
   const transporter = getMailer();
-  const from = process.env.EMAIL_FROM || process.env.SMTP_USER!;
+  const from = process.env.SMTP_USER;
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px">

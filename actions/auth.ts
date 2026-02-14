@@ -72,8 +72,8 @@ export async function logoutAction() {
 // 1) Request an OTP to reset password (sends email)
 export async function requestPasswordResetAction(email: string) {
   try {
-    await auth.api.sendEmailOTP({
-      body: { email },
+    await auth.api.sendVerificationOTP({
+      body: { email, type: "forget-password" },
     });
     return { success: true };
   } catch (error) {
@@ -82,23 +82,19 @@ export async function requestPasswordResetAction(email: string) {
   }
 }
 
-// 2) Verify OTP and then set a new password
-// Strategy: verifying the OTP authenticates the user (session). Then we change the password.
 export async function resetPasswordWithOtpAction(params: {
   email: string;
-  code: string;
+  otp: string;
   newPassword: string;
 }) {
-  const { email, code, newPassword } = params;
+  const { email, otp, newPassword } = params;
   try {
-    // Verify OTP - creates a temporary session for the email owner
-    await auth.api.verifyEmailOTP({
-      body: { email, code },
+    await auth.api.checkVerificationOTP({
+      body: { email, type: "forget-password", otp },
     });
 
-    // Now change password as the authenticated user
     await auth.api.changePassword({
-      body: { newPassword },
+      body: {  },
     });
 
     return { success: true };
