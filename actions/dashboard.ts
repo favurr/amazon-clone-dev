@@ -81,7 +81,7 @@ export async function getLowStockItems() {
   try {
     const lowStockVariants = await prisma.variant.findMany({
       where: {
-        stock: { lt: 10 }, // Threshold
+        stock: { lt: 40 }, // Threshold
       },
       include: {
         product: {

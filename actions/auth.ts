@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { APIError } from "better-auth";
+import { createNotification } from "@/actions/notifications";
 
 export async function signUpAction(values: any) {
   const { email, password, firstName, lastName } = values;
@@ -17,6 +18,14 @@ export async function signUpAction(values: any) {
         role: "USER",
       },
     });
+
+    // Create notification for new user signup
+    await createNotification(
+      "NEW_USER",
+      "New User Registered",
+      `${firstName} ${lastName} (${email}) just signed up`,
+      `/admin/customers`
+    );
 
     return { success: true };
   } catch (error) {

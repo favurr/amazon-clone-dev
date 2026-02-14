@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "@/actions/notifications";
 
 /**
  * Check if a user can review a product
@@ -153,7 +154,33 @@ export async function submitReview(
         rating,
         comment: comment || null,
       },
+      include: {
+        product: {
+          select: {
+            title: true,
+            slug: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
     });
+
+    // Create notification for bad reviews (rating <= 3)
+    if (rating <= 3) {
+      const userName = review.user?.name || `${review.user?.firstName} ${review.user?.lastName}`;
+      await createNotification(
+        "BAD_REVIEW",
+        "Low Rating Received",
+        `${userName} gave ${rating} star${rating !== 1 ? 's' : ''} to ${review.product.title}`,
+        `/admin/review`
+      );
+    }
 
     // Revalidate the product page and admin dashboard
     revalidatePath(`/products/${productId}`);

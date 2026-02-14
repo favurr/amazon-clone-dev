@@ -1,7 +1,8 @@
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { NotificationBell } from "@/components/admin/notification-bell";
 
 export function AdminHeader() {
   return (
@@ -16,12 +17,7 @@ export function AdminHeader() {
       </div>
       
       <div className="flex items-center gap-4">
-        <button className="relative text-slate-500 hover:text-slate-800">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-            3
-          </span>
-        </button>
+        <NotificationBell />
         <div className="h-8 w-8 rounded-full bg-slate-200 border border-slate-300" />
       </div>
     </header>

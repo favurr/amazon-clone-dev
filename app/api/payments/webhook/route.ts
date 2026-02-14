@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import crypto from "crypto";
+import { createNotification } from "@/actions/notifications";
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,6 +67,15 @@ export async function POST(request: NextRequest) {
               card_network: cardNetwork,
               card_last4: cardLast4,
             },
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
           });
 
           // Clear cart for the user
@@ -78,6 +88,15 @@ export async function POST(request: NextRequest) {
               },
             });
           }
+
+          // Create notification for new order
+          const customerName = order.user?.name || `${order.user?.firstName} ${order.user?.lastName}`;
+          await createNotification(
+            "NEW_ORDER",
+            "New Order Received",
+            `${customerName} placed an order worth ₦${Number(order.totalPrice).toLocaleString()}`,
+            `/admin/orders`
+          );
 
           console.log("[Webhook] Order completed:", orderId);
         } else {
@@ -92,14 +111,32 @@ export async function POST(request: NextRequest) {
       const orderId = metadata?.order_id;
 
       if (orderId) {
-        await prisma.order.update({
+        const order = await prisma.order.update({
           where: { id: orderId },
           data: {
             status: "FAILED",
             paymentStatus: "failed",
             paystack_id: reference,
           },
+          include: {
+            user: {
+              select: {
+                name: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
         });
+
+        // Create notification for failed order
+        const customerName = order.user?.name || `${order.user?.firstName} ${order.user?.lastName}`;
+        await createNotification(
+          "ORDER_FAILED",
+          "Order Payment Failed",
+          `Payment failed for ${customerName}'s order (₦${Number(order.totalPrice).toLocaleString()})`,
+          `/admin/orders`
+        );
 
         console.log("[Webhook] Order failed:", orderId);
       }

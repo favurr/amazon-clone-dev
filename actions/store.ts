@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "@/actions/notifications";
 
 interface ProductFilters {
   search?: string;
@@ -402,6 +403,29 @@ export async function addToCart(
         },
       });
       isNewItem = true;
+    }
+
+    // Check for low stock after adding to cart
+    if (variantId) {
+      const variant = await prisma.variant.findUnique({
+        where: { id: variantId },
+        include: {
+          product: {
+            select: {
+              title: true,
+            },
+          },
+        },
+      });
+
+      if (variant && variant.stock <= 5) {
+        await createNotification(
+          "LOW_STOCK",
+          "Low Stock Alert",
+          `${variant.product.title} (${variant.type}: ${variant.value}) has only ${variant.stock} units left`,
+          `/admin/products`
+        );
+      }
     }
 
     revalidatePath("/cart");

@@ -240,6 +240,20 @@ model Tag {
   @@map("tag")
 }
 
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // "BAD_REVIEW" | "NEW_ORDER" | "LOW_STOCK" | "NEW_USER" | "ORDER_FAILED"
+  title     String
+  message   String
+  link      String?  // e.g. "/admin/orders/abc123"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notification")
+}
+
 enum roles {
   USER
   ADMIN
