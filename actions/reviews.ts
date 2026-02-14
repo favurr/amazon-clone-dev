@@ -314,6 +314,44 @@ export async function deleteReview(
 }
 
 /**
+ * Get all reviews by a specific user
+ */
+export async function getUserReviews(userId: string) {
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { userId },
+      include: {
+        product: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            imageUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return reviews.map((review) => ({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      product: {
+        id: review.product.id,
+        title: review.product.title,
+        slug: review.product.slug,
+        imageUrl: review.product.imageUrl,
+      },
+    }));
+  } catch (error) {
+    console.error("[GET_USER_REVIEWS_ERROR]", error);
+    return [];
+  }
+}
+
+/**
  * Get all reviews for admin panel (with filtering)
  */
 export async function getAllReviews(filter?: {

@@ -128,4 +128,82 @@ export function ProductCard({
       </Link>
     );
   }
+
+  // Default (non-compact) card
+  return (
+    <Link href={`/products/${product.slug}`} className="group block">
+      <Card className="relative overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md">
+        {/* Image */}
+        <div className="relative">
+          <img
+            src={product.mainImageUrl}
+            alt={product.title}
+            className="w-full aspect-square object-cover"
+          />
+
+          {discount > 0 && (
+            <Badge
+              variant="secondary"
+              className="absolute top-2 left-2 z-10 bg-[#c7511f] text-white text-xs font-bold px-2 py-0.5 rounded"
+            >
+              -{discount}%
+            </Badge>
+          )}
+
+          {!inStock && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <span className="bg-white text-xs font-semibold px-2 py-1 rounded">
+                Out of Stock
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <CardHeader className="p-4">
+          <CardAction></CardAction>
+          <CardTitle className="text-sm md:text-base text-[#0F1111] line-clamp-2 mb-1">
+            {product.title}
+          </CardTitle>
+          <CardDescription>
+            {product._count && product._count.reviews > 0 && (
+              <div className="flex items-center gap-1 mb-1">
+                <div className="flex">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        i < 4 ? "fill-[#ff9900] text-[#ff9900]" : "text-slate-300",
+                      )}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-[#007185]">
+                  {product._count.reviews}
+                </span>
+              </div>
+            )}
+          </CardDescription>
+        </CardHeader>
+
+        <CardFooter className="px-4 pb-4">
+          <div className="flex items-baseline gap-2">
+            {product.discountedPrice && (
+              <span className="text-xs text-[#565959]">
+                <Currency>
+                  <CurrencyValue value={product.titlePrice} className="line-through" />
+                </Currency>
+              </span>
+            )}
+            <span className="text-lg font-medium text-[#B12704]">
+              <Currency>
+                <CurrencyValue value={finalPrice} />
+              </Currency>
+            </span>
+          </div>
+        </CardFooter>
+      </Card>
+    </Link>
+  );
 }

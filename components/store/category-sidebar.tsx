@@ -175,11 +175,11 @@ export function CategorySidebar({
             />
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold text-slate-700">
-                ${priceRange[0].toFixed(2)}
+                ₦{priceRange[0].toLocaleString()}
               </span>
               <span className="text-slate-400">—</span>
               <span className="font-semibold text-slate-700">
-                ${priceRange[1].toFixed(2)}
+                ₦{priceRange[1].toLocaleString()}
               </span>
             </div>
           </div>

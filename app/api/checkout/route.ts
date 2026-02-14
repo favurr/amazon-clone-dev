@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       customerPhone,
     });
     
-    const initializeUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/payments/initialize`;
+    const initializeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/initialize`;
     console.log("[Checkout] Calling initialize URL:", initializeUrl);
     
     const chargeResponse = await fetch(

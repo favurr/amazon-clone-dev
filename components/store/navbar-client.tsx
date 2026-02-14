@@ -364,11 +364,10 @@ export default function NavbarClient({
                     Your Orders
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled
-                  className="cursor-not-allowed opacity-50"
-                >
-                  Your Reviews
+                <DropdownMenuItem asChild>
+                  <Link href="/reviews" className="cursor-pointer">
+                    Your Reviews
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled
@@ -421,10 +420,10 @@ export default function NavbarClient({
                   Your Orders (sign in required)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  disabled
-                  className="cursor-not-allowed opacity-50"
+                  onClick={() => router.push("/auth/login?redirect=/reviews")}
+                  className="cursor-pointer opacity-70"
                 >
-                  Your Reviews
+                  Your Reviews (sign in required)
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled

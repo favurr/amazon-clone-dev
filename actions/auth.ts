@@ -68,3 +68,42 @@ export async function logoutAction() {
     },
   });
 }
+
+// 1) Request an OTP to reset password (sends email)
+export async function requestPasswordResetAction(email: string) {
+  try {
+    await auth.api.sendEmailOTP({
+      body: { email },
+    });
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof APIError ? error.message : "Failed to send code";
+    return { success: false, error: message };
+  }
+}
+
+// 2) Verify OTP and then set a new password
+// Strategy: verifying the OTP authenticates the user (session). Then we change the password.
+export async function resetPasswordWithOtpAction(params: {
+  email: string;
+  code: string;
+  newPassword: string;
+}) {
+  const { email, code, newPassword } = params;
+  try {
+    // Verify OTP - creates a temporary session for the email owner
+    await auth.api.verifyEmailOTP({
+      body: { email, code },
+    });
+
+    // Now change password as the authenticated user
+    await auth.api.changePassword({
+      body: { newPassword },
+    });
+
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof APIError ? error.message : "Failed to reset password";
+    return { success: false, error: message };
+  }
+}

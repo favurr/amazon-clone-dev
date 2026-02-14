@@ -226,7 +226,7 @@ export async function getLandingData() {
 
 export async function getFilterOptions() {
   try {
-    const [categories, tags, priceRange] = await Promise.all([
+    const [categories, tags, titleAgg, discountAgg, variantAgg] = await Promise.all([
       prisma.category.findMany({
         where: { isActive: true },
         select: { id: true, name: true, slug: true },
@@ -241,17 +241,41 @@ export async function getFilterOptions() {
         _min: { titlePrice: true },
         _max: { titlePrice: true },
       }),
+      prisma.product.aggregate({
+        where: { isArchived: false, discountedPrice: { not: null } },
+        _min: { discountedPrice: true },
+        _max: { discountedPrice: true },
+      }),
+      prisma.variant.aggregate({
+        _min: { price: true },
+        _max: { price: true },
+      }).catch(() => ({ _min: { price: null }, _max: { price: null } })),
     ]);
+
+    const minCandidates = [
+      Number(titleAgg._min.titlePrice),
+      Number(discountAgg._min.discountedPrice),
+      Number(variantAgg._min.price),
+    ].filter((v) => Number.isFinite(v) && v > 0) as number[];
+
+    const maxCandidates = [
+      Number(titleAgg._max.titlePrice),
+      Number(discountAgg._max.discountedPrice),
+      Number(variantAgg._max.price),
+    ].filter((v) => Number.isFinite(v) && v > 0) as number[];
+
+    const minPrice = minCandidates.length > 0 ? Math.floor(Math.min(...minCandidates)) : 0;
+    const maxPrice = maxCandidates.length > 0 ? Math.ceil(Math.max(...maxCandidates)) : 0;
 
     return {
       categories,
       tags,
-      minPrice: Number(priceRange._min.titlePrice) || 0,
-      maxPrice: Number(priceRange._max.titlePrice) || 10000,
+      minPrice,
+      maxPrice,
     };
   } catch (error) {
     console.error("GET_FILTER_OPTIONS_ERROR", error);
-    return { categories: [], tags: [], minPrice: 0, maxPrice: 10000 };
+    return { categories: [], tags: [], minPrice: 0, maxPrice: 0 };
   }
 }
 

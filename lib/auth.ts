@@ -2,6 +2,8 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import prisma from "@/lib/prisma";
+import { emailOTP } from "better-auth/plugins/email-otp";
+import { sendOtpEmail } from "@/lib/email";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -31,7 +33,18 @@ export const auth = betterAuth({
   session: {
     expiresIn: 30 * 24 * 60 * 60,
   },
-  plugins: [nextCookies()],
+  plugins: [
+    nextCookies(),
+    emailOTP({
+      // 10 minutes default
+      expiresIn: 10 * 60,
+      // Called whenever we request an OTP to be sent
+      async sendOTP({ email, code /* purpose */ }) {
+        // purpose could be used to customize subject/content if needed
+        await sendOtpEmail(email, code);
+      },
+    }),
+  ],
   trustedOrigins: [String(process.env.NEXT_PUBLIC_BASE_URL)],
 });
 
