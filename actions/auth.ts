@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { APIError } from "better-auth";
 import { createNotification } from "@/actions/notifications";
+import { sendOtpEmail } from "@/lib/email";
 
 export async function signUpAction(values: any) {
   const { email, password, firstName, lastName } = values;

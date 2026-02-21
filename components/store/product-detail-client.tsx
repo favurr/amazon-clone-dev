@@ -23,6 +23,8 @@ import { ReviewForm } from "@/components/store/review-form";
 import { ReviewList } from "@/components/store/review-list";
 import Link from "next/link";
 import { Currency, CurrencyValue } from "../currency";
+import { WishlistButton } from "@/components/store/wishlist-button";
+import { useWishlistPopoverStore } from "@/store/use-wishlist-popover-store";
 
 interface ProductDetailClientProps {
   product: any;
@@ -37,6 +39,7 @@ interface ProductDetailClientProps {
       createdAt: Date;
     } | null;
   } | null;
+  isInWishlist: boolean;
 }
 
 export function ProductDetailClient({
@@ -44,6 +47,7 @@ export function ProductDetailClient({
   userId,
   reviews,
   reviewEligibility,
+  isInWishlist,
 }: ProductDetailClientProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<
@@ -53,6 +57,11 @@ export function ProductDetailClient({
   const [isAdding, setIsAdding] = useState(false);
   const alert = useAlert();
   const { increment, setCount } = useCartStore();
+  const { triggerShow } = useWishlistPopoverStore();
+
+  const handleWishlistAdd = () => {
+    triggerShow();
+  };
 
   const images =
     product.images.length > 0
@@ -341,10 +350,13 @@ export function ProductDetailClient({
                 </Button>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Wishlist
-                  </Button>
+                  <WishlistButton
+                    productId={product.id}
+                    userId={userId}
+                    isInWishlist={isInWishlist}
+                    onWishlistAdd={handleWishlistAdd}
+                    className="flex-1 h-11"
+                  />
                   <Button variant="outline" className="flex-1">
                     <Share2 className="h-4 w-4 mr-2" />
                     Share

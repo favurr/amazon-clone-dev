@@ -1,20 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { logoutAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
-import {
-  ChevronDown,
-  Search,
-  ShoppingCart,
-  Tag,
-  Package,
-  FolderOpen,
-  Menu,
-  X,
-} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,10 +9,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatPrice } from "@/lib/formatters";
 import { useCartStore } from "@/store/use-cart-store";
-import { logoutAction } from "@/actions/auth";
+import { useWishlistPopoverStore } from "@/store/use-wishlist-popover-store";
+import {
+  CheckCircle2,
+  ChevronDown,
+  FolderOpen,
+  Menu,
+  Package,
+  Search,
+  Tag,
+  X
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 type Category = {
   id: string;
@@ -71,6 +73,8 @@ export default function NavbarClient({
 
   const cartCount = useCartStore((s) => s.count);
   const setCartCount = useCartStore((s) => s.setCount);
+  const { show: showWishlistPopover } = useWishlistPopoverStore();
+  
   useEffect(() => {
     setCartCount(initialCartCount);
   }, [initialCartCount, setCartCount]);
@@ -337,22 +341,49 @@ export default function NavbarClient({
         </div>
 
         {/* Account & Lists - Hidden on mobile */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div
-              className={`${navBoxClass} flex-row items-end gap-1 hidden md:flex`}
+        <Popover open={showWishlistPopover}>
+          <DropdownMenu>
+            <PopoverTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <div
+                  className={`${navBoxClass} flex-row items-end gap-1 hidden md:flex`}
+                >
+                  <div className="flex flex-col">
+                    <span className="text-[10px] lg:text-[12px] leading-none text-gray-300 font-light">
+                      Hello, {user ? user.firstName : "sign in"}
+                    </span>
+                    <span className="text-[12px] lg:text-[14px] leading-none font-bold">
+                      Account & Lists
+                    </span>
+                  </div>
+                  <ChevronDown size={14} className="text-gray-400 mb-0.5" />
+                </div>
+              </DropdownMenuTrigger>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="w-100 bg-card shadow-md" 
+              side="bottom" 
+              align="end"
+              sideOffset={8}
             >
-              <div className="flex flex-col">
-                <span className="text-[10px] lg:text-[12px] leading-none text-gray-300 font-light">
-                  Hello, {user ? user.firstName : "sign in"}
-                </span>
-                <span className="text-[12px] lg:text-[14px] leading-none font-bold">
-                  Account & Lists
-                </span>
+              <div className="flex items-start gap-3">
+                <div className="bg-amber-500 rounded-full p-1">
+                  <CheckCircle2 className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 flex items-baseline justify-between">
+                  <h4 className="font-semibold text-black mb-1">
+                    Added to Saved Items
+                  </h4>
+                  <Button 
+                    asChild 
+                    size="sm" 
+                    className="bg-amber-600 hover:bg-amber-700 h-8 text-xs"
+                  >
+                    <Link href="/saved-items">View Saved Items</Link>
+                  </Button>
+                </div>
               </div>
-              <ChevronDown size={14} className="text-gray-400 mb-0.5" />
-            </div>
-          </DropdownMenuTrigger>
+            </PopoverContent>
           <DropdownMenuContent className="w-[200px]">
             {user ? (
               <>
@@ -370,11 +401,10 @@ export default function NavbarClient({
                     Your Reviews
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled
-                  className="cursor-not-allowed opacity-50"
-                >
-                  Saved Items
+                <DropdownMenuItem asChild>
+                  <Link href="/saved-items" className="cursor-pointer">
+                    Saved Items
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled
@@ -429,15 +459,16 @@ export default function NavbarClient({
                   Your Reviews (sign in required)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  disabled
-                  className="cursor-not-allowed opacity-50"
+                  onClick={() => router.push("/auth/login?redirect=/saved-items")}
+                  className="cursor-pointer opacity-70"
                 >
-                  Saved Items
+                  Saved Items (sign in required)
                 </DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
+        </Popover>
 
         {/* Returns & Orders - Hidden on mobile */}
         <Link

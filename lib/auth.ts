@@ -37,8 +37,7 @@ export const auth = betterAuth({
     nextCookies(),
     emailOTP({
       expiresIn: 10 * 60,
-      async sendVerificationOTP({ email, otp /* purpose */ }) {
-        // purpose could be used to customize subject/content if needed
+      async sendVerificationOTP({ email, otp }) {
         await sendOtpEmail(email, otp);
       },
     }),

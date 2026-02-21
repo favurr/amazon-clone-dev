@@ -4,6 +4,7 @@ import { ProductDetailClient } from "@/components/store/product-detail-client";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { canUserReviewProduct, getProductReviews } from "@/actions/reviews";
+import { isInWishlist } from "@/actions/wishlist";
 
 export default async function ProductDetailPage({
   params,
@@ -30,12 +31,16 @@ export default async function ProductDetailPage({
     reviewEligibility = await canUserReviewProduct(userId, product.id);
   }
 
+  // Check if product is in wishlist
+  const inWishlist = userId ? await isInWishlist(userId, product.id) : false;
+
   return (
     <ProductDetailClient
       product={product}
       userId={userId}
       reviews={reviews}
       reviewEligibility={reviewEligibility}
+      isInWishlist={inWishlist}
     />
   );
 }

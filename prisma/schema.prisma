@@ -24,6 +24,7 @@ model User {
   orders        Order[]
   reviews       Review[]
   sessions      Session[]
+  wishlist      Wishlist[]
 
   @@map("user")
 }
@@ -49,6 +50,7 @@ model Product {
   reviews         Review[]
   variants        Variant[]
   tags            Tag[]          @relation("ProductTags")
+  wishlist        Wishlist[]
 
   @@index([title])
   @@index([categoryId])
@@ -252,6 +254,20 @@ model Notification {
   @@index([isRead])
   @@index([createdAt])
   @@map("notification")
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("wishlist")
 }
 
 enum roles {
