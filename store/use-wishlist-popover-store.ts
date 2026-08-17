@@ -7,7 +7,7 @@ interface WishlistPopoverState {
 }
 
 export const useWishlistPopoverStore = create<WishlistPopoverState>((set) => ({
-  show: true,
+  show: false,
   triggerShow: () => {
     set({ show: true });
     setTimeout(() => {
